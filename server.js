@@ -11,19 +11,27 @@ const fs = require('fs');
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static('public')); // to serve frontend
+
+// Serve static files using an absolute path
+app.use(express.static(path.join(__dirname, 'public')));
+
+// API routes
 app.use('/api', routes);
 
-const PORT = process.env.PORT || 8080; // Use Railway's assigned port or fallback to 8080
-app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+// Instead of two "/" routes, use one for serving the login interface.
+// If you need a separate status route, you can add this:
+// app.get("/status", (req, res) => {
+//    res.send("✅ Server is running successfully!");
+// });
 
-app.get("/", (req, res) => {
-    res.send("✅ Server is running successfully!");
-});
-
+// Serve the login.html file at the root route
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+
+// Bind the server to the correct Railway-assigned port:
+const PORT = process.env.PORT || 8080;
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT} (process.env.PORT=${process.env.PORT})`));
 
 
 // 🔄 Auto-Backup Setup (Runs Every 3 Days at Midnight)
