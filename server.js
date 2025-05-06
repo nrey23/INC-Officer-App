@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Bind the server to the correct Railway-assigned port
+// Bind the server to the correct Railway-assigned port:
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`✅ Server running on port ${PORT} (process.env.PORT=${process.env.PORT})`);
@@ -48,19 +48,18 @@ if (!fs.existsSync(backupsFolder)) {
   fs.mkdirSync(backupsFolder, { recursive: true });
 }
 
-// Google Drive Setup: Authenticate using your service account key
+// Google Drive Setup: Authenticate using your service account key from an environment variable
 const auth = new google.auth.GoogleAuth({
   credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY),
   scopes: ['https://www.googleapis.com/auth/drive.file'],
 });
-
 const drive = google.drive({ version: 'v3', auth });
 
 // Function to upload a backup file to Google Drive
 async function uploadBackupToGoogleDrive(backupPath, fileName) {
   const fileMetadata = {
     name: fileName,
-    // Uncomment and update the "parents" property to specify a particular Drive folder:
+    // Optionally, specify a Drive folder with:
     // parents: ['YOUR_FOLDER_ID'],
   };
 
@@ -83,15 +82,40 @@ async function uploadBackupToGoogleDrive(backupPath, fileName) {
   }
 }
 
-// Function to generate a backup using mysqldump and then upload it to Google Drive
+// Function to set file permissions to public and retrieve its public link
+async function getPublicLink(fileId) {
+  try {
+    await drive.permissions.create({
+      fileId,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+
+    const fileData = await drive.files.get({
+      fileId,
+      fields: 'webViewLink, webContentLink',
+    });
+    console.log(`✅ Public link set: ${fileData.data.webViewLink}`);
+    return fileData.data;
+  } catch (error) {
+    console.error(`❌ Failed to set public link: ${error.message}`);
+    throw error;
+  }
+}
+
+// Function to generate a backup using mysqldump and then upload it to Google Drive.
+// After uploading, it sets the file's permission to public and logs the public link.
 async function createBackup() {
   console.log("⏳ Running automated backup...");
 
   const now = new Date();
   // Create a base filename like "autobackup_MMDDYYYY"
-  const baseFileName = `autobackup_${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
+  const baseFileName = `autobackup_${(now.getMonth() + 1)
+    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
   
-  // Determine the backup sequence number for today in case more than one backup is created the same day
+  // Determine the backup sequence number for today in case multiple backups are created.
   const existingBackups = fs.readdirSync(backupsFolder).filter(file => file.startsWith(baseFileName)).length;
   const backupNumber = existingBackups + 1;
   const fileName = `${baseFileName}_${backupNumber}.sql`;
@@ -112,7 +136,12 @@ async function createBackup() {
     console.log(`✅ Auto-backup successfully created at: ${backupPath}`);
 
     // Upload the backup file to Google Drive
-    await uploadBackupToGoogleDrive(backupPath, fileName);
+    const fileId = await uploadBackupToGoogleDrive(backupPath, fileName);
+
+    // Set the file to public and retrieve its public link details
+    const publicLinks = await getPublicLink(fileId);
+
+    console.log(`✅ Backup public link: ${publicLinks.webViewLink}`);
   } catch (error) {
     console.error(`❌ Auto-backup failed: ${error.message}`);
   }
@@ -124,6 +153,6 @@ cron.schedule(
   createBackup,
   {
     scheduled: true,
-    timezone: "Asia/Manila", // Adjust this if needed
+    timezone: "Asia/Manila", // Adjust as needed
   }
 );

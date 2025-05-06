@@ -11,9 +11,10 @@ const mysqldump = require("mysqldump");
 const { google } = require("googleapis");
 const path = require("path");
 const fs = require("fs");
+const { exec } = require("child_process"); // For restore command
 
 // --------------------
-// General Application Routes (Members, Login etc.)
+// GENERAL APPLICATION ROUTES (Members, Login, etc.)
 // --------------------
 
 // GET member count
@@ -115,7 +116,7 @@ router.post("/login", (req, res) => {
 // BACKUP FEATURES WITH GOOGLE DRIVE INTEGRATION
 // ----------------------
 
-// Database configuration for backup (please ensure these values are secure)
+// Database configuration for backup
 const dbHost = 'hopper.proxy.rlwy.net';
 const dbUser = 'root';
 const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';  
@@ -133,14 +134,13 @@ const auth = new google.auth.GoogleAuth({
   credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY),
   scopes: ['https://www.googleapis.com/auth/drive.file'],
 });
-
 const drive = google.drive({ version: 'v3', auth });
 
 // Function to upload backup file to Google Drive
 async function uploadBackupToGoogleDrive(backupPath, fileName) {
   const fileMetadata = {
     name: fileName,
-    // Uncomment and update the line below to specify a Drive folder:
+    // Optionally, specify a Drive folder by adding:
     // parents: ['YOUR_FOLDER_ID'],
   };
   const media = {
@@ -161,11 +161,37 @@ async function uploadBackupToGoogleDrive(backupPath, fileName) {
   }
 }
 
-// Backup Route: Create backup using mysqldump package and upload to Google Drive
+// Function to set file permissions to public and retrieve its public link(s)
+async function getPublicLink(fileId) {
+  try {
+    // Set permission so anyone with the link can read the file
+    await drive.permissions.create({
+      fileId,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+    // Retrieve the file metadata containing the public links
+    const fileData = await drive.files.get({
+      fileId,
+      fields: 'webViewLink, webContentLink'
+    });
+    console.log(`✅ Public link set: ${fileData.data.webViewLink}`);
+    return fileData.data;
+  } catch (error) {
+    console.error(`❌ Failed to set public link: ${error.message}`);
+    throw error;
+  }
+}
+
+// Backup Route: Create backup using mysqldump, upload to Google Drive,
+// then set it to public and return the public link.
 router.post("/backup", async (req, res) => {
   const now = new Date();
   // Generate base filename (e.g., backup_MMDDYYYY)
-  const baseFileName = `backup_${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
+  const baseFileName = `backup_${(now.getMonth() + 1)
+    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
   // Count existing backups for today's date
   const existingBackups = fs.readdirSync(backupsFolder).filter(file => file.startsWith(baseFileName)).length;
   const backupNumber = existingBackups + 1;
@@ -188,10 +214,14 @@ router.post("/backup", async (req, res) => {
     
     // Upload the backup file to Google Drive
     const driveFileId = await uploadBackupToGoogleDrive(backupPath, fileName);
+    // Set the file permission to public and retrieve its public link(s)
+    const publicLinks = await getPublicLink(driveFileId);
+    
     res.status(200).json({ 
       message: "Backup successful", 
       backupFile: fileName, 
-      googleDriveFileId: driveFileId 
+      googleDriveFileId: driveFileId,
+      publicLink: publicLinks.webViewLink
     });
   } catch (error) {
     console.error(`❌ Error creating backup: ${error.message}`);
@@ -211,7 +241,7 @@ router.post("/restore", (req, res) => {
     return res.status(404).json({ error: "Backup file not found." });
   }
   
-  // Build the restore command (using the mysql client)
+  // Build the restore command (assuming the mysql client is available)
   const restoreCommand = `mysql -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName} < "${backupPath}"`;
   console.log("📥 Running restore command:", restoreCommand);
   
@@ -222,7 +252,6 @@ router.post("/restore", (req, res) => {
       console.error("StdErr:", stderr);
       return res.status(500).json({ error: "Restore failed", details: error.message });
     }
-    
     console.log("✅ Restore successful from:", backupPath);
     res.status(200).json({ message: "Restore successful", restoredFrom: backupFile });
   });
