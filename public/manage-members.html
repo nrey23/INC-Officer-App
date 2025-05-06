@@ -366,37 +366,37 @@
 });
 
 document.getElementById("btnRestore").addEventListener("click", async () => {
-  const backupFile = document.getElementById("restoreFileName").value.trim();
-  if (!backupFile) {
-    return alert("⚠ Please enter a backup file name.");
-  }
-
-  try {
-    const response = await fetch("/api/restore", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ backupFile })
-    });
-
-    const data = await response.json();
-
-    if (response.ok) {
-      // Display the restore message box with the file name
-      const restoreMessageBox = document.getElementById("restoreMessageBox");
-      document.getElementById("restoreFileNameDisplay").innerText = backupFile;
-      restoreMessageBox.classList.remove("d-none");
-
-      // Hide after 5 seconds
-      setTimeout(() => {
-        restoreMessageBox.classList.add("d-none");
-      }, 5000);
-    } else {
-      alert(`❌ Restore failed: ${data.error}`);
+    const backupFile = document.getElementById("restoreFileName").value.trim();
+    if (!backupFile) {
+      return alert("⚠ Please enter a backup file name.");
     }
-  } catch (error) {
-    alert("⚠ Network error. Please try again.");
-  }
-});
+
+    try {
+      const response = await fetch("/api/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ backupFile }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // Display the restore message box with the file name
+        const restoreMessageBox = document.getElementById("restoreMessageBox");
+        document.getElementById("restoreFileNameDisplay").innerText = backupFile;
+        restoreMessageBox.classList.remove("d-none");
+
+        // Hide after 5 seconds
+        setTimeout(() => {
+          restoreMessageBox.classList.add("d-none");
+        }, 5000);
+      } else {
+        alert(`❌ Restore failed: ${data.error}`);
+      }
+    } catch (error) {
+      alert("⚠ Network error. Please try again.");
+    }
+  });
 
 </script>
 

@@ -11,7 +11,7 @@ const mysqldump = require("mysqldump");
 const { google } = require("googleapis");
 const path = require("path");
 const fs = require("fs");
-const { exec } = require("child_process"); // For restore command
+const MySQLImport = require("mysql-import"); // New: For restore via Node.js
 
 // --------------------
 // GENERAL APPLICATION ROUTES (Members, Login, etc.)
@@ -140,8 +140,7 @@ const drive = google.drive({ version: 'v3', auth });
 async function uploadBackupToGoogleDrive(backupPath, fileName) {
   const fileMetadata = {
     name: fileName,
-    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'],
-
+    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'], // Your designated Google Drive folder ID
   };
   const media = {
     mimeType: 'application/sql',
@@ -229,8 +228,8 @@ router.post("/backup", async (req, res) => {
   }
 });
 
-// Restore Route (Using the mysql client; ensure 'mysql' is available in your environment)
-router.post("/restore", (req, res) => {
+// Restore Route using mysql-import (no dependency on the system mysql client)
+router.post("/restore", async (req, res) => {
   const { backupFile } = req.body; // Expected: "backup_MMDDYYYY_1.sql"
   if (!backupFile) {
     return res.status(400).json({ error: "Please provide a backup file name." });
@@ -241,20 +240,24 @@ router.post("/restore", (req, res) => {
     return res.status(404).json({ error: "Backup file not found." });
   }
   
-  // Build the restore command (assuming the mysql client is available)
-  const restoreCommand = `mysql -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName} < "${backupPath}"`;
-  console.log("📥 Running restore command:", restoreCommand);
-  
-  exec(restoreCommand, (error, stdout, stderr) => {
-    if (error) {
-      console.error("❌ Restore failed!");
-      console.error("Error message:", error.message);
-      console.error("StdErr:", stderr);
-      return res.status(500).json({ error: "Restore failed", details: error.message });
-    }
+  try {
+    const importer = new MySQLImport({
+      host: dbHost,
+      port: dbPort,
+      user: dbUser,
+      password: dbPassword,
+      database: dbName,
+    });
+    
+    // Import the backup file (reads and executes statements from the dump)
+    await importer.import(backupPath);
+    importer.disconnect();
     console.log("✅ Restore successful from:", backupPath);
     res.status(200).json({ message: "Restore successful", restoredFrom: backupFile });
-  });
+  } catch (error) {
+    console.error("❌ Restore failed!", error);
+    res.status(500).json({ error: "Restore failed", details: error.message });
+  }
 });
 
 module.exports = router;
