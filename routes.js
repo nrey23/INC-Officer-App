@@ -140,8 +140,8 @@ const drive = google.drive({ version: 'v3', auth });
 async function uploadBackupToGoogleDrive(backupPath, fileName) {
   const fileMetadata = {
     name: fileName,
-    // Optionally, specify a Drive folder by adding:
-    // parents: ['YOUR_FOLDER_ID'],
+    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'],
+
   };
   const media = {
     mimeType: 'application/sql',
