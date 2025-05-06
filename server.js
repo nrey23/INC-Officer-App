@@ -14,10 +14,9 @@ app.use(bodyParser.json());
 app.use(express.static('public')); // to serve frontend
 app.use('/api', routes);
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 3000; // Use Railway's assigned port or default to 3000
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 
 // 🔄 Auto-Backup Setup (Runs Every 3 Days at Midnight)
 const dbHost = 'hopper.proxy.rlwy.net';
