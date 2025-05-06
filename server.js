@@ -5,7 +5,7 @@ const routes = require('./routes');
 const cron = require('node-cron'); // 🔄 Scheduling backups
 const path = require('path');
 const fs = require('fs');
-const mysqldump = require('mysqldump'); // ✅ Use Node.js package for backups
+const mysqldump = require('mysqldump'); // ✅ Using Node.js package for backups
 const { exec } = require('child_process');
 
 const app = express();
@@ -47,6 +47,7 @@ async function createBackup() {
     const backupPath = path.join(backupsFolder, fileName);
 
     try {
+        // Run backup using Node.js mysqldump package.
         await mysqldump({
             connection: {
                 host: dbHost,
