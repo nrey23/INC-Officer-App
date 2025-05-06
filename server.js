@@ -49,7 +49,7 @@ if (!fs.existsSync(backupsFolder)) {
 
 // Google Drive Setup: Authenticate using your service account key
 const auth = new google.auth.GoogleAuth({
-  keyFile: '"C:\Users\nrlic\OneDrive\Documents\church-duty-tracker\ccc151-final-project-61aafd39d145.json"', // <-- UPDATE this with your JSON key path
+  keyFile: 'path/to/your-service-account-key.json', // <-- UPDATE this with your JSON key path
   scopes: ['https://www.googleapis.com/auth/drive.file'],
 });
 const drive = google.drive({ version: 'v3', auth });
