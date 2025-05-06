@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>INC Church Officer App - Manage Members</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    .wrapper {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 230px;
+      background-color: #343a40;
+      color: white;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 10px;
+    }
+
+    .sidebar.hidden {
+      display: none;
+    }
+
+    .sidebar hr {
+      margin: 5px 0;
+      border-color: #495057;
+    }
+
+    .sidebar-title {
+      font-weight: bold;
+      color: white;
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-size: 0.75rem;
+    }
+
+    .sidebar .nav-link {
+      color: white;
+      padding: 6px 20px;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      background-color: #495057;
+      border-radius: 4px;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+    }
+
+    .main-content.expanded {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .topbar {
+      height: 60px;
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .menu-toggle {
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .profile img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+    }
+
+    .page-content {
+      padding: 20px;
+      flex-grow: 1;
+    }
+
+    .card-box {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Unable to direct to current page and auto direct to login -->
+  <script>
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+  
+  
+<div class="wrapper">
+  <!-- Sidebar -->
+  <nav id="sidebar" class="sidebar">
+    <div class="d-flex align-items-center justify-content-center mb-4" style="gap: 10px;">
+      <img src="inc-logo.png" alt="INC Logo" style="height: 35px;">
+      <span style="font-size: 1.2rem; font-weight: bold;">INC Church Officer App</span>
+    </div>
+    <hr>
+    <div class="sidebar-title">MAIN</div>
+    <ul class="nav flex-column">
+      <li><a href="dashboard.html" class="nav-link">Dashboard</a></li>
+      <li><a href="members.html" class="nav-link">Members</a></li>
+    </ul>
+    <div class="sidebar-title">MANAGEMENT</div>
+    <ul class="nav flex-column">
+      <li><a href="manage-members.html" class="nav-link active">Manage Members</a></li>
+    <div class="sidebar-title">TOOLS</div>
+    <ul class="nav flex-column">
+      <li><a href="scanner.html" class="nav-link">QR Scanner</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div id="main-content" class="main-content">
+    <div class="topbar">
+      <span id="menuToggle" class="menu-toggle">&#9776;</span>
+      <div class="dropdown">
+        <div class="profile dropdown-toggle" data-bs-toggle="dropdown" role="button" style="cursor: pointer;">
+          <span>Administrator</span>
+          <img src="https://i.imgur.com/6VBx3io.png" alt="Admin">
+        </div>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
+        </ul>
+      </div>      
+    </div>
+
+    <div class="page-content container-fluid">
+      <h2>Manage Members</h2>
+
+      <!-- Add Member Form -->
+      <form id="addMemberForm" class="row g-2 mb-4">
+        <div class="col-md-2">
+          <input type="text" id="full_name" class="form-control" placeholder="Full Name" required>
+        </div>
+        <div class="col-md-2">
+          <select id="gender" class="form-select" required>
+            <option value="">Gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input type="date" id="birthday" class="form-control" placeholder="Birthday">
+        </div>
+        <div class="col-md-2">
+          <select id="role" class="form-select" required>
+            <option value="">Select Role</option>
+            <option value="Deacon">Deacon</option>
+            <option value="Deaconess">Deaconess</option> <!-- Added this line -->
+            <option value="Choir">Choir</option>
+            <option value="Secretary">Secretary</option>
+            <option value="Finance">Finance</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <input type="text" id="contact_info" class="form-control" placeholder="Contact Info" required>
+        </div>
+        <div class="col-md-2">
+          <button type="submit" class="btn btn-success w-100">Add Member</button>
+        </div>
+      </form>
+
+      <!-- Filters, Search, Backup, and Restore -->
+      <div class="row mb-3">
+        <div class="col-md-3">
+          <select id="filterRole" class="form-select">
+            <option value="">All Roles</option>
+            <option value="Deacon">Deacon</option>
+            <option value="Deaconess">Deaconess</option>
+            <option value="Choir">Choir</option>
+            <option value="Secretary">Secretary</option>
+            <option value="Finance">Finance</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <input type="text" id="searchName" class="form-control" placeholder="Search by name...">
+        </div>
+        <div class="col-md-3">
+          <button id="btnBackup" class="btn btn-primary w-100">Create Backup</button>
+        </div>
+        <div class="col-md-3 d-flex align-items-center">
+          <input type="text" id="restoreFileName" class="form-control me-2 flex-grow-1" placeholder="Enter backup file name to restore">
+          <button id="btnRestore" class="btn btn-warning w-100">Restore Backup</button>
+        </div>
+      </div>
+      
+
+      <!-- Backup Message Box -->
+      <div id="backupMessageBox" class="alert alert-success mt-3 text-center d-none">
+        <strong>✅ Backup successful!</strong> File: <span id="backupFileName"></span>
+      </div>
+
+      <!-- Restore Message Box -->
+      <div id="restoreMessageBox" class="alert alert-warning mt-3 text-center d-none">
+        <strong>📥 Restore successful!</strong> File: <span id="restoreFileNameDisplay"></span>
+      </div>
+
+      <!-- Member Table -->
+      <table class="table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Name</th>
+            <th>Gender</th>
+            <th>Birthday</th>
+            <th>Role</th>
+            <th>Contact</th>
+            <th>QR</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="memberList"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <form id="editMemberForm" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Edit Member</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit_id">
+        <div class="mb-3">
+          <label>Full Name</label>
+          <input type="text" id="edit_full_name" class="form-control" required>
+        </div>
+        <div class="mb-3">
+          <label>Gender</label>
+          <select id="edit_gender" class="form-select" required>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label>Birthday</label>
+          <input type="date" id="edit_birthday" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label>Role</label>
+          <select id="edit_role" class="form-select" required>
+            <option value="Deacon">Deacon</option>
+            <option value="Deaconess">Deaconess</option> <!-- Added this line -->
+            <option value="Choir">Choir</option>
+            <option value="Secretary">Secretary</option>  
+            <option value="Finance">Finance</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label>Contact Info</label>
+          <input type="text" id="edit_contact_info" class="form-control" required>
+        </div>
+      </div>  
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Update</button>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirm Delete</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        Are you sure you want to delete this member?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button id="confirmDeleteBtn" type="button" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Error Alert Container -->
+<div id="alertContainer" style="position: fixed; top: 20px; right: 20px; width: 300px; z-index: 1100;"></div>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('main-content');
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    sidebar.classList.toggle('hidden');
+    mainContent.classList.toggle('expanded');
+  });
+</script>
+
+<script>
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("isLoggedIn");
+    window.location.href = "login.html";
+  });
+</script>
+
+
+
+<script>
+  document.getElementById("btnBackup").addEventListener("click", async () => {
+  try {
+    const response = await fetch("/api/backup", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" }
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+      // Display the message box with the file name
+      const messageBox = document.getElementById("backupMessageBox");
+      document.getElementById("backupFileName").innerText = data.backupFile;
+      messageBox.classList.remove("d-none");
+
+      // Hide after 5 seconds
+      setTimeout(() => {
+        messageBox.classList.add("d-none");
+      }, 5000);
+    } else {
+      alert("❌ Backup failed: " + data.error);
+    }
+  } catch (error) {
+    alert("⚠ Network error. Please try again.");
+  }
+});
+
+document.getElementById("btnRestore").addEventListener("click", async () => {
+  const backupFile = document.getElementById("restoreFileName").value.trim();
+  if (!backupFile) {
+    return alert("⚠ Please enter a backup file name.");
+  }
+
+  try {
+    const response = await fetch("/api/restore", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ backupFile })
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      // Display the restore message box with the file name
+      const restoreMessageBox = document.getElementById("restoreMessageBox");
+      document.getElementById("restoreFileNameDisplay").innerText = backupFile;
+      restoreMessageBox.classList.remove("d-none");
+
+      // Hide after 5 seconds
+      setTimeout(() => {
+        restoreMessageBox.classList.add("d-none");
+      }, 5000);
+    } else {
+      alert(`❌ Restore failed: ${data.error}`);
+    }
+  } catch (error) {
+    alert("⚠ Network error. Please try again.");
+  }
+});
+
+</script>
+
+  
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="manage-members.js"></script>
+
+</body>
+</html>

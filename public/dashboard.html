@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>INC Church Officer App - Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      overflow-x: hidden;
+    }
+
+    .wrapper {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .sidebar {
+      width: 230px;
+      background-color: #343a40;
+      color: white;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 10px;
+    }
+
+    .sidebar.hidden {
+      display: none;
+    }
+
+    .sidebar hr {
+      margin: 5px 0;
+      border-color: #495057;
+    }
+
+    .sidebar-title {
+      font-weight: bold;
+      color: white;
+      margin-top: 15px;
+      margin-bottom: 10px;
+      font-size: 0.75rem;
+    }
+
+    .sidebar .nav-link {
+      color: white;
+      padding: 6px 20px;
+      font-size: 1rem;
+      margin-bottom: 2px;
+    }
+
+    .sidebar .nav-link:hover,
+    .sidebar .nav-link.active {
+      background-color: #495057;
+      border-radius: 4px;
+    }
+
+    .main-content {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      transition: all 0.3s ease;
+    }
+
+    .main-content.expanded {
+      width: 100%;
+      margin-left: 0;
+    }
+
+    .topbar {
+      height: 60px;
+      background: #ffffff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .menu-toggle {
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .profile img {
+      width: 35px;
+      height: 35px;
+      border-radius: 50%;
+    }
+
+    .page-content {
+      padding: 20px;
+      flex-grow: 1;
+    }
+
+    .card-box {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      height: 100%;
+    }
+    
+    .count-card {
+      margin-bottom: 0;
+      font-size: 1.1rem;
+    }
+    
+    .count-number {
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+    
+    .compact-row {
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Unable to direct to current page and auto direct to login -->
+  <script>
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      window.location.href = "login.html";
+    }
+  </script>
+  
+  
+<div class="wrapper">
+  <!-- Sidebar -->
+  <nav id="sidebar" class="sidebar">
+    <div class="d-flex align-items-center justify-content-center mb-4" style="gap: 10px;">
+      <img src="inc-logo.png" alt="INC Logo" style="height: 35px;">
+      <span style="font-size: 1.2rem; font-weight: bold;">INC Church Officer App</span>
+    </div>
+    <hr>
+    <div class="sidebar-title">MAIN</div>
+    <ul class="nav flex-column">
+      <li><a href="dashboard.html" class="nav-link active">Dashboard</a></li>
+      <li><a href="members.html" class="nav-link">Members</a></li>
+    </ul>
+    <div class="sidebar-title">MANAGEMENT</div>
+    <ul class="nav flex-column">
+      <li><a href="manage-members.html" class="nav-link">Manage Members</a></li>
+    </ul>
+    <div class="sidebar-title">TOOLS</div>
+    <ul class="nav flex-column">
+      <li><a href="scanner.html" class="nav-link">QR Scanner</a></li>
+    </ul>
+  </nav>
+
+  <!-- Main Content -->
+  <div id="main-content" class="main-content">
+    <div class="topbar">
+      <span id="menuToggle" class="menu-toggle">&#9776;</span>
+      <div class="dropdown">
+        <div class="profile dropdown-toggle" data-bs-toggle="dropdown" role="button" style="cursor: pointer;">
+          <span>Administrator</span>
+          <img src="https://i.imgur.com/6VBx3io.png" alt="Admin">
+        </div>
+        <ul class="dropdown-menu dropdown-menu-end">
+          <li><a class="dropdown-item text-danger" href="#" id="logoutBtn">Logout</a></li>
+        </ul>
+      </div>      
+    </div>
+
+    <div class="page-content">
+      <h2>Dashboard</h2>
+      <p>Welcome to the INC Church Officer Application System.</p>
+      
+      <div id="errorBanner" class="alert alert-danger d-none mb-3"></div>
+
+      <!-- Compact Role Counts Row -->
+      <div class="row compact-row g-2">
+        <div class="col">
+          <div class="card-box">
+            <h5 class="count-card">Deacons</h5>
+            <h2 class="count-number" id="deaconCount">--</h2>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card-box">
+            <h5 class="count-card">Deaconesses</h5>
+            <h2 class="count-number" id="deaconessCount">--</h2>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card-box">
+            <h5 class="count-card">Choir</h5>
+            <h2 class="count-number" id="choirCount">--</h2>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card-box">
+            <h5 class="count-card">Secretaries</h5>
+            <h2 class="count-number" id="secretaryCount">--</h2>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card-box">
+            <h5 class="count-card">Finance</h5>
+            <h2 class="count-number" id="financeCount">--</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-4">
+        <h4>Worship Service Schedule</h4>
+        <h5>Thursday</h5>
+        <ul>
+          <li>6:00 AM</li>
+          <li>10:00 AM</li>
+          <li>6:45 PM</li>
+        </ul>
+        <h5>Saturday</h5>
+        <ul>
+          <li>6:00 PM</li>
+        </ul>          
+        <h5>Sunday</h5>
+        <ul>
+          <li>6:00 AM</li>
+          <li>10:00 AM</li>
+        </ul>
+
+        <h4 class="mt-4">Special Events</h4>
+        <ul>
+          <li>Thanksgiving</li>
+          <li>Holy Supper</li>
+          <li>Anointing</li>
+          <li>Evanglical Mission</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const sidebar = document.getElementById('sidebar');
+  const mainContent = document.getElementById('main-content');
+
+  document.getElementById('menuToggle').addEventListener('click', () => {
+    sidebar.classList.toggle('hidden');
+    mainContent.classList.toggle('expanded');
+  });
+</script>
+
+<script>
+  document.getElementById("logoutBtn").addEventListener("click", () => {
+    localStorage.removeItem("isLoggedIn");
+    window.location.href = "login.html";
+  });
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="dashboard.js"></script>
+
+</body>
+</html>

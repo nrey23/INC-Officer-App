@@ -1,0 +1,16 @@
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+form input, form select, form button {
+    margin: 5px;
+    padding: 8px;
+}
+table {
+    margin-top: 20px;
+    width: 100%;
+}
+img {
+    width: 100px;
+    height: 100px;
+}
