@@ -15,7 +15,11 @@ app.use(express.static('public')); // to serve frontend
 app.use('/api', routes);
 
 const PORT = process.env.PORT || 8080; // Use Railway's assigned port or fallback to 8080
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running at http://localhost:${PORT}`));
+
+app.get("/", (req, res) => {
+    res.send("✅ Server is running successfully!");
+});
 
 
 // 🔄 Auto-Backup Setup (Runs Every 3 Days at Midnight)
@@ -42,7 +46,7 @@ cron.schedule('0 0 */3 * *', () => {
     const backupPath = path.join(backupsFolder, fileName);
 
     // mysqldump command
-    const mysqldumpPath = `"C:\\Program Files\\MySQL\\MySQL Server 8.0\\bin\\mysqldump.exe"`;
+    const mysqldumpPath = "mysqldump"; // Let Railway resolve the correct path
     const command = `${mysqldumpPath} -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} "${dbName}" > "${backupPath}"`;
 
     exec(command, (error, stdout, stderr) => {
