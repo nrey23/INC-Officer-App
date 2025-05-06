@@ -130,7 +130,7 @@ if (!fs.existsSync(backupsFolder)) {
 
 // Google Drive Setup: Authenticate using your service account key
 const auth = new google.auth.GoogleAuth({
-  keyFile: 'path/to/your-service-account-key.json', // Update with your JSON key file path
+  keyFile: './service-account-key.json', // Update with your JSON key file path
   scopes: ['https://www.googleapis.com/auth/drive.file'],
 });
 const drive = google.drive({ version: 'v3', auth });
