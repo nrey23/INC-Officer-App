@@ -4,15 +4,17 @@ const router = express.Router();
 const db = require("./db");
 const bcrypt = require("bcryptjs");
 
-// For backup & restore features
+// ----------------------
+// Required Modules for Backup & Restore
+// ----------------------
 const mysqldump = require("mysqldump");
-const { exec } = require("child_process");
+const { google } = require("googleapis");
 const path = require("path");
 const fs = require("fs");
 
-// ----------------------
-// MEMBER ROUTES
-// ----------------------
+// --------------------
+// General Application Routes (Members, Login etc.)
+// --------------------
 
 // GET member count
 router.get('/member-count', (req, res) => {
@@ -78,7 +80,7 @@ router.get('/dashboard-counts', (req, res) => {
   db.query(query, (err, results) => {
     if (err) return res.status(500).json({ message: 'Error fetching counts' });
     
-    // Create an object like: { Deacon: 5, Choir: 8, Secretary: 3, Finance: 2 }
+    // Build counts object, e.g., { Deacon: 5, Choir: 8, Secretary: 3, Finance: 2 }
     const counts = {};
     results.forEach(row => {
       counts[row.role] = row.count;
@@ -95,18 +97,12 @@ router.get('/dashboard-counts', (req, res) => {
 // Admin Login Route
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
-
-  // Query the database for the given username
   db.query("SELECT * FROM users WHERE username = ?", [username], async (err, results) => {
     if (err || results.length === 0) {
       return res.status(401).json({ error: "Invalid credentials" });
     }
-    // Get the stored hashed password from the database
     const storedHash = results[0].password;
-    
-    // Compare the entered password with the stored hash
     const isValid = await bcrypt.compare(password, storedHash);
-
     if (isValid) {
       res.status(200).json({ message: "Login successful!" });
     } else {
@@ -116,14 +112,14 @@ router.post("/login", (req, res) => {
 });
 
 // ----------------------
-// BACKUP FEATURES
+// BACKUP FEATURES WITH GOOGLE DRIVE INTEGRATION
 // ----------------------
 
-// Configuration for credentials and backup folder
+// Database configuration for backup (please ensure these values are secure)
 const dbHost = 'hopper.proxy.rlwy.net';
 const dbUser = 'root';
-const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';  // Replace with your actual MySQL password
-const dbName = 'railway'; // Use your correct database name
+const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';  
+const dbName = 'railway';
 const dbPort = 16446;
 const backupsFolder = path.join(__dirname, 'backups');
 
@@ -132,21 +128,51 @@ if (!fs.existsSync(backupsFolder)) {
   fs.mkdirSync(backupsFolder, { recursive: true });
 }
 
-// Backup Route using Node.js mysqldump package
+// Google Drive Setup: Authenticate using your service account key
+const auth = new google.auth.GoogleAuth({
+  keyFile: 'path/to/your-service-account-key.json', // Update with your JSON key file path
+  scopes: ['https://www.googleapis.com/auth/drive.file'],
+});
+const drive = google.drive({ version: 'v3', auth });
+
+// Function to upload backup file to Google Drive
+async function uploadBackupToGoogleDrive(backupPath, fileName) {
+  const fileMetadata = {
+    name: fileName,
+    // Uncomment and update the line below to specify a Drive folder:
+    // parents: ['YOUR_FOLDER_ID'],
+  };
+  const media = {
+    mimeType: 'application/sql',
+    body: fs.createReadStream(backupPath),
+  };
+  try {
+    const response = await drive.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: 'id',
+    });
+    console.log(`✅ Backup file uploaded to Google Drive with File ID: ${response.data.id}`);
+    return response.data.id;
+  } catch (error) {
+    console.error(`❌ Failed to upload backup to Google Drive: ${error.message}`);
+    throw error;
+  }
+}
+
+// Backup Route: Create backup using mysqldump package and upload to Google Drive
 router.post("/backup", async (req, res) => {
   const now = new Date();
-  
-  // Generate the base filename (e.g., backup_MMDDYYYY)
+  // Generate base filename (e.g., backup_MMDDYYYY)
   const baseFileName = `backup_${(now.getMonth() + 1).toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
-  // Count how many backups already exist for today
+  // Count existing backups for today's date
   const existingBackups = fs.readdirSync(backupsFolder).filter(file => file.startsWith(baseFileName)).length;
-  // Create the final filename with sequence number
   const backupNumber = existingBackups + 1;
   const fileName = `${baseFileName}_${backupNumber}.sql`;
   const backupPath = path.join(backupsFolder, fileName);
   
   try {
-    // Use the Node.js mysqldump package to generate the backup file
+    // Create the backup file using the mysqldump Node.js package
     await mysqldump({
       connection: {
         host: dbHost,
@@ -158,31 +184,36 @@ router.post("/backup", async (req, res) => {
       dumpToFile: backupPath,
     });
     console.log(`✅ Backup successfully created at: ${backupPath}`);
-    res.status(200).json({ message: "Backup successful", backupFile: fileName });
+    
+    // Upload the backup file to Google Drive
+    const driveFileId = await uploadBackupToGoogleDrive(backupPath, fileName);
+    res.status(200).json({ 
+      message: "Backup successful", 
+      backupFile: fileName, 
+      googleDriveFileId: driveFileId 
+    });
   } catch (error) {
     console.error(`❌ Error creating backup: ${error.message}`);
     res.status(500).json({ error: "Backup failed", details: error.message });
   }
 });
 
-// Restore Route (using the mysql client)
-// Note: Ensure that the `mysql` command is available on your host machine (e.g., in Railway's Linux environment).
+// Restore Route (Using the mysql client; ensure 'mysql' is available in your environment)
 router.post("/restore", (req, res) => {
-  const { backupFile } = req.body; // Expect backupFile like "backup_MMDDYYYY_1.sql"
+  const { backupFile } = req.body; // Expected: "backup_MMDDYYYY_1.sql"
   if (!backupFile) {
     return res.status(400).json({ error: "Please provide a backup file name." });
   }
-
+  
   const backupPath = path.join(backupsFolder, backupFile);
   if (!fs.existsSync(backupPath)) {
     return res.status(404).json({ error: "Backup file not found." });
   }
-
-  // Build the restore command (using the mysql client, assumed to be in PATH)
+  
+  // Build the restore command (using the mysql client)
   const restoreCommand = `mysql -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName} < "${backupPath}"`;
-
   console.log("📥 Running restore command:", restoreCommand);
-
+  
   exec(restoreCommand, (error, stdout, stderr) => {
     if (error) {
       console.error("❌ Restore failed!");
@@ -190,7 +221,7 @@ router.post("/restore", (req, res) => {
       console.error("StdErr:", stderr);
       return res.status(500).json({ error: "Restore failed", details: error.message });
     }
-
+    
     console.log("✅ Restore successful from:", backupPath);
     res.status(200).json({ message: "Restore successful", restoredFrom: backupFile });
   });
