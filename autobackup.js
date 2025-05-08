@@ -23,6 +23,14 @@ const auth = new google.auth.GoogleAuth({
 });
 const drive = google.drive({ version: 'v3', auth });
 
+// Log the values to verify
+console.log("Database Host:", dbHost);
+console.log("Database User:", dbUser);
+console.log("Database Password:", dbPassword);
+console.log("Database Name:", dbName);
+console.log("Database Port:", dbPort);
+console.log("Backup Path:", backupPath);
+
 /**
  * Uploads a backup file to Google Drive
  * @param {string} backupPath - Local path to the backup file
