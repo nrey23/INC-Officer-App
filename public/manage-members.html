@@ -211,9 +211,9 @@
           <input type="text" id="searchName" class="form-control" placeholder="Search by name...">
         </div>
         <div class="col-md-3">
-          <div class="btn-group w-100">
-            <button id="btnAutoBackup" class="btn btn-primary">Auto Backup</button>
-            <button id="btnManualBackup" class="btn btn-info">Manual Backup</button>
+          <div class="d-flex flex-column">
+            <button id="btnManualBackup" class="btn btn-info mb-2">Create Manual Backup</button>
+            <small class="text-muted">Auto backup runs every 3 days</small>
           </div>
         </div>
         <div class="col-md-3">
@@ -223,7 +223,29 @@
           </div>
         </div>
       </div>
-      
+
+      <!-- Backup Status Box -->
+      <div class="row mb-3">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header bg-light">
+              <h5 class="card-title mb-0">Backup Status</h5>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <h6>Last Scheduled Backup</h6>
+                  <p id="lastBackupInfo">Loading...</p>
+                </div>
+                <div class="col-md-6">
+                  <h6>Next Scheduled Backup</h6>
+                  <p id="nextBackupInfo">Loading...</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- Backup Message Box -->
       <div id="backupMessageBox" class="alert alert-success mt-3 text-center d-none">
@@ -346,29 +368,6 @@
 
 
 <script>
-  document.getElementById('btnAutoBackup').addEventListener('click', async () => {
-    try {
-      const response = await fetch('/auto-backup', { method: 'POST' });
-      const data = await response.json();
-      
-      if (response.ok) {
-        const messageBox = document.getElementById('backupMessageBox');
-        const backupDetails = document.getElementById('backupDetails');
-        const backupLink = document.getElementById('backupLink');
-        
-        backupDetails.textContent = `File: ${data.backupFile}`;
-        backupLink.href = data.publicLink;
-        
-        messageBox.classList.remove('d-none');
-        setTimeout(() => messageBox.classList.add('d-none'), 5000);
-      } else {
-        throw new Error(data.error || 'Backup failed');
-      }
-    } catch (error) {
-      alert('Error creating backup: ' + error.message);
-    }
-  });
-
   document.getElementById('btnManualBackup').addEventListener('click', async () => {
     try {
       const response = await fetch('/manual-backup', { method: 'POST' });
@@ -419,6 +418,35 @@
       alert('Error restoring backup: ' + error.message);
     }
   });
+</script>
+
+<script>
+// Function to update backup status
+async function updateBackupStatus() {
+  try {
+    const response = await fetch('/backup-status');
+    const data = await response.json();
+    
+    if (response.ok) {
+      document.getElementById('lastBackupInfo').innerHTML = `
+        <strong>Date:</strong> ${new Date(data.lastBackup.date).toLocaleString()}<br>
+        <strong>File:</strong> ${data.lastBackup.fileName}<br>
+        <a href="${data.lastBackup.link}" target="_blank" class="btn btn-sm btn-outline-primary mt-1">View in Drive</a>
+      `;
+      
+      document.getElementById('nextBackupInfo').innerHTML = `
+        <strong>Date:</strong> ${new Date(data.nextBackup).toLocaleString()}<br>
+        <strong>Time Remaining:</strong> ${data.timeRemaining}
+      `;
+    }
+  } catch (error) {
+    console.error('Error fetching backup status:', error);
+  }
+}
+
+// Update backup status every minute
+updateBackupStatus();
+setInterval(updateBackupStatus, 60000);
 </script>
 
   
