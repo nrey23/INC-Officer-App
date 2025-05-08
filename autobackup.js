@@ -66,6 +66,8 @@ async function createAutoBackup() {
   const fileName = `${baseFileName}.sql`;
   const backupsFolder = path.join(__dirname, 'backups');
   
+  console.log("[DEBUG] Generated backup file name:", fileName);
+
   // Create backups directory if it doesn't exist
   if (!fs.existsSync(backupsFolder)) {
     fs.mkdirSync(backupsFolder, { recursive: true });
