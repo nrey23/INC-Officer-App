@@ -146,11 +146,13 @@ async function createBackupBuffer() {
 
 // Manual Backup Route: Returns backup file for download
 router.post("/manual-backup", async (req, res) => {
-  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
+  const now = new Date();
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const baseFileName = `manualbackup_${year}_${month}_${day}`;
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const baseFileName = `manualbackup_${year}_${month}_${day}_${hours}${minutes}`;
   const fileName = `${baseFileName}.sql`;
 
   console.log("[DEBUG] Generated backup file name:", fileName);
