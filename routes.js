@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("./db");
 const bcrypt = require("bcryptjs");
-const mysql = require("mysql2/promise");
+const mysql = require('mysql2/promise');
 const { createAutoBackup } = require('./autobackup');
 
 // ----------------------
@@ -66,7 +66,7 @@ router.get("/members", (req, res) => {
 // DELETE MEMBER
 router.delete("/delete-member/:id", (req, res) => {
   const memberId = req.params.id;
-  const query = "DELETE FROM tbl_members WHERE member_id = ?";
+  const query = `DELETE FROM tbl_members WHERE member_id = ?`;
   db.query(query, [memberId], (err) => {
     if (err) return res.status(500).json({ message: "Delete failed", error: err });
     res.json({ message: "Member deleted successfully" });
@@ -118,20 +118,12 @@ router.post("/login", (req, res) => {
 // BACKUP FEATURES WITH GOOGLE DRIVE INTEGRATION
 // ----------------------
 
-// Database configuration for backup (using Railway environment variables)
-const dbHost = process.env.DB_HOST;        // e.g., "hopper.proxy.rlwy.net"
-const dbUser = process.env.DB_USER;        // e.g., "root"
-const dbPassword = process.env.DB_PASSWORD;  // e.g., "yourPassword"
-const dbName = process.env.DB_NAME;        // e.g., "railway"
-const dbPort = process.env.DB_PORT;        // e.g., "16446" (convert to number if necessary)
-
-// Google Drive Setup (using Railway environment variables)
-const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY),
-  scopes: ["https://www.googleapis.com/auth/drive.file"],
-});
-const drive = google.drive({ version: "v3", auth });
-const driveFolderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+// Database configuration for backup
+const dbHost = 'hopper.proxy.rlwy.net';
+const dbUser = 'root';
+const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';  
+const dbName = 'railway';
+const dbPort = 16446;
 
 // Function to create backup and return it as a buffer
 async function createBackupBuffer() {
@@ -144,22 +136,22 @@ async function createBackupBuffer() {
       database: dbName,
     }
   });
-  return Buffer.from(result.dump.schema + "\n" + result.dump.data, "utf-8");
+  return Buffer.from(result.dump.schema + '\n' + result.dump.data, 'utf-8');
 }
 
 // Manual Backup Route: Returns backup file for download
 router.post("/manual-backup", async (req, res) => {
   const now = new Date();
   const fileName = `manual_backup_${(now.getMonth() + 1)
-    .toString().padStart(2, "0")}${now.getDate().toString().padStart(2, "0")}${now.getFullYear()}.sql`;
+    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
   
   try {
     // Create backup buffer
     const backupBuffer = await createBackupBuffer();
     
     // Set headers for file download
-    res.setHeader("Content-Type", "application/sql");
-    res.setHeader("Content-Disposition", `attachment; filename=${fileName}`);
+    res.setHeader('Content-Type', 'application/sql');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
     
     // Send the file
     res.send(backupBuffer);
@@ -169,21 +161,21 @@ router.post("/manual-backup", async (req, res) => {
   }
 });
 
-// Restore Route: Accepts file upload backup (using express-fileupload middleware)
+// Restore Route: Now accepts file upload instead of looking for local file
 router.post("/restore", async (req, res) => {
   if (!req.files || !req.files.backupFile) {
     return res.status(400).json({ error: "Please upload a backup file." });
   }
 
   const backupFile = req.files.backupFile;
-  // Add drop table statements before the SQL dump (optional: adjust as needed)
+  // Add drop table statements before the SQL dump
   const dropTables = `
     SET FOREIGN_KEY_CHECKS=0;
     DROP TABLE IF EXISTS tbl_members;
     DROP TABLE IF EXISTS users;
     SET FOREIGN_KEY_CHECKS=1;
   `;
-  const sql = dropTables + "\n" + backupFile.data.toString();
+  const sql = dropTables + '\n' + backupFile.data.toString();
 
   try {
     const connection = await mysql.createConnection({
@@ -212,14 +204,14 @@ async function getPublicLink(fileId) {
     await drive.permissions.create({
       fileId,
       requestBody: {
-        role: "reader",
-        type: "anyone",
+        role: 'reader',
+        type: 'anyone',
       },
     });
     // Retrieve the file metadata containing the public links
     const fileData = await drive.files.get({
       fileId,
-      fields: "webViewLink, webContentLink"
+      fields: 'webViewLink, webContentLink'
     });
     console.log(`✅ Public link set: ${fileData.data.webViewLink}`);
     return fileData.data;
@@ -229,14 +221,14 @@ async function getPublicLink(fileId) {
   }
 }
 
-// Auto Backup Route: Calls the logic defined in autobackup.js
+// Auto Backup Route: Calls the same logic as autobackup.js
 router.post("/auto-backup", async (req, res) => {
   try {
     const backupFile = await createAutoBackup();
     res.status(200).json({
       message: "Auto backup successful!",
       backupFile,
-      driveFolder: `https://drive.google.com/drive/folders/${driveFolderId}`
+      driveFolder: "https://drive.google.com/drive/folders/1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs"
     });
   } catch (error) {
     console.error(`❌ Error creating auto backup: ${error.message}`);
