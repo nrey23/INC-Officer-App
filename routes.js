@@ -178,8 +178,8 @@ async function uploadBackupToGoogleDrive(backupBuffer, fileName) {
   }
 }
 
-// Auto Backup Route: Creates backup and uploads directly to Google Drive
-router.post("/auto-backup", async (req, res) => {
+// Function to perform automatic backup
+async function performAutomaticBackup() {
   const now = new Date();
   const fileName = `auto_backup_${(now.getMonth() + 1)
     .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
@@ -192,17 +192,19 @@ router.post("/auto-backup", async (req, res) => {
     const driveFileId = await uploadBackupToGoogleDrive(backupBuffer, fileName);
     const publicLinks = await getPublicLink(driveFileId);
     
-    res.status(200).json({ 
-      message: "Auto backup successful", 
-      backupFile: fileName, 
-      googleDriveFileId: driveFileId,
-      publicLink: publicLinks.webViewLink
-    });
+    console.log(`✅ Automatic backup completed: ${fileName}`);
+    console.log(`🔗 Backup link: ${publicLinks.webViewLink}`);
   } catch (error) {
-    console.error(`❌ Error creating auto backup: ${error.message}`);
-    res.status(500).json({ error: "Auto backup failed", details: error.message });
+    console.error(`❌ Error in automatic backup: ${error.message}`);
   }
-});
+}
+
+// Run automatic backup every 3 days (3 * 24 * 60 * 60 * 1000 milliseconds)
+const THREE_DAYS = 3 * 24 * 60 * 60 * 1000;
+setInterval(performAutomaticBackup, THREE_DAYS);
+
+// Run first backup immediately when server starts
+performAutomaticBackup();
 
 // Manual Backup Route: Returns backup file for download
 router.post("/manual-backup", async (req, res) => {
