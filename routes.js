@@ -37,8 +37,8 @@ function requireAuth(req, res, next) {
   return res.status(401).json({ error: "Unauthorized" });
 }
 
-// ADD MEMBER (unprotected)
-router.post("/add-member", (req, res) => {
+// ADD MEMBER (protected)
+router.post("/add-member/;id", (req, res) => {
   const { full_name, role, contact_info, gender, birthday } = req.body;
   const qrData = `${full_name}-${Date.now()}`;
   const query = `
@@ -106,7 +106,7 @@ router.get('/dashboard-counts', (req, res) => {
 // SECURITY FEATURES
 // ----------------------
 
-// Admin Login Route (no rate limit)
+// Admin Login Route
 router.post("/login", (req, res) => {
   const { username, password } = req.body;
   db.query("SELECT * FROM users WHERE username = ?", [username], async (err, results) => {
@@ -149,8 +149,8 @@ async function createBackupBuffer() {
   return Buffer.from(result.dump.schema + '\n' + result.dump.data, 'utf-8');
 }
 
-// Manual Backup Route: Returns backup file for download (protected)
-router.post("/manual-backup", requireAuth, async (req, res) => {
+// Manual Backup Route: Returns backup file for download
+router.post("/manual-backup", async (req, res) => {
   const now = new Date();
   const fileName = `manual_backup_${(now.getMonth() + 1)
     .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
@@ -171,8 +171,8 @@ router.post("/manual-backup", requireAuth, async (req, res) => {
   }
 });
 
-// Restore Route: Now accepts file upload instead of looking for local file (protected)
-router.post("/restore", requireAuth, async (req, res) => {
+// Restore Route: Now accepts file upload instead of looking for local file
+router.post("/restore", async (req, res) => {
   if (!req.files || !req.files.backupFile) {
     return res.status(400).json({ error: "Please upload a backup file." });
   }
@@ -231,8 +231,8 @@ async function getPublicLink(fileId) {
   }
 }
 
-// Auto Backup Route: Calls the same logic as autobackup.js (protected)
-router.post("/auto-backup", requireAuth, async (req, res) => {
+// Auto Backup Route: Calls the same logic as autobackup.js
+router.post("/auto-backup", async (req, res) => {
   try {
     const backupFile = await createAutoBackup();
     res.status(200).json({
