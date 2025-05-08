@@ -126,59 +126,73 @@
       margin-bottom: 15px;
     }
 
-    .carousel-container {
+    .dashboard-flex {
+      display: flex;
+      align-items: flex-start;
+      gap: 40px;
       width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
+    }
+
+    .dashboard-schedule {
+      flex: 1 1 0;
+      min-width: 350px;
+    }
+
+    .dashboard-carousel {
+      flex: 0 0 350px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      min-width: 300px;
+      max-width: 350px;
+      height: 300px;
+      margin-top: 20px;
     }
 
     .carousel {
+      position: relative;
+      width: 100%;
+      height: 220px;
+      overflow: hidden;
       display: flex;
-      overflow-x: auto;
-      scroll-behavior: smooth;
-      gap: 16px;
-      padding: 10px 0;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE/Edge */
-    }
-
-    .carousel::-webkit-scrollbar {
-      display: none; /* Chrome/Safari/Opera */
-    }
-
-    .carousel img {
-      flex: 0 0 auto;
-      width: 300px;
-      height: 200px;
-      object-fit: cover;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-      transition: transform 0.3s ease;
-    }
-
-    .carousel img:hover {
-      transform: scale(1.05);
-    }
-
-    .carousel-dots {
-      display: flex;
+      align-items: center;
       justify-content: center;
-      gap: 8px;
-      margin-top: 16px;
     }
 
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background-color: #ccc;
+    .carousel-image {
+      display: none;
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      transition: opacity 0.5s;
+    }
+
+    .carousel-image.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .carousel-controls {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .carousel-controls button {
+      padding: 6px 16px;
+      font-size: 1.2em;
+      border: none;
+      background: #eee;
+      border-radius: 5px;
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background 0.2s;
     }
 
-    .dot.active {
-      background-color: #333;
+    .carousel-controls button:hover {
+      background: #ccc;
     }
   </style>
 </head>
@@ -270,47 +284,42 @@
         </div>
       </div>
 
-      <div class="card p-4">
-        <h4>Worship Service Schedule</h4>
-        <h5>Thursday</h5>
-        <ul>
-          <li>6:00 AM</li>
-          <li>10:00 AM</li>
-          <li>6:45 PM</li>
-        </ul>
-        <h5>Saturday</h5>
-        <ul>
-          <li>6:00 PM</li>
-        </ul>          
-        <h5>Sunday</h5>
-        <ul>
-          <li>6:00 AM</li>
-          <li>10:00 AM</li>
-        </ul>
-
-        <h4 class="mt-4">Special Events</h4>
-        <ul>
-          <li>Thanksgiving</li>
-          <li>Holy Supper</li>
-          <li>Anointing</li>
-          <li>Evanglical Mission</li>
-        </ul>
-      </div>
-
-      <div class="carousel-container">
-        <div class="carousel">
-          <img src="images/image1.jpg" alt="Image 1" />
-          <img src="images/image2.jpg" alt="Image 2" />
-          <img src="images/image3.jpg" alt="Image 3" />
-          <img src="images/image4.jpg" alt="Image 4" />
-          <img src="images/image5.jpg" alt="Image 5" />
+      <div class="dashboard-flex">
+        <div class="dashboard-schedule">
+          <h2>Worship Service Schedule</h2>
+          <b>Thursday</b>
+          <ul>
+            <li>6:00 AM</li>
+            <li>10:00 AM</li>
+            <li>6:45 PM</li>
+          </ul>
+          <b>Saturday</b>
+          <ul>
+            <li>6:00 PM</li>
+          </ul>
+          <b>Sunday</b>
+          <ul>
+            <li>6:00 AM</li>
+            <li>10:00 AM</li>
+          </ul>
+          <h2>Special Events</h2>
+          <ul>
+            <li>Thanksgiving</li>
+            <li>Holy Supper</li>
+            <li>Anointing</li>
+            <li>Evangelical Mission</li>
+          </ul>
         </div>
-        <div class="carousel-dots">
-          <span class="dot active"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
+        <div class="dashboard-carousel">
+          <div class="carousel">
+            <img src="images/image1.jpg" alt="Image 1" class="carousel-image active" />
+            <img src="images/image2.jpg" alt="Image 2" class="carousel-image" />
+            <img src="images/image3.jpg" alt="Image 3" class="carousel-image" />
+          </div>
+          <div class="carousel-controls">
+            <button id="prevBtn">&#8592;</button>
+            <button id="nextBtn">&#8594;</button>
+          </div>
         </div>
       </div>
     </div>

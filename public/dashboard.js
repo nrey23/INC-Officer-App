@@ -34,39 +34,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     }, 30000);
 
     // Carousel functionality
-    function initCarousel() {
-      const carousel = document.querySelector('.carousel');
-      const dots = document.querySelectorAll('.dot');
-      let currentIndex = 0;
+    const images = document.querySelectorAll('.carousel-image');
+    let current = 0;
 
-      function scrollToImage(index) {
-        const imageWidth = carousel.querySelector('img').offsetWidth + 16; // 16px is the gap
-        carousel.scrollTo({
-          left: index * imageWidth,
-          behavior: 'smooth'
-        });
-        dots.forEach((dot, i) => {
-          dot.classList.toggle('active', i === index);
-        });
-      }
-
-      // Auto-scroll every 3 seconds
-      setInterval(() => {
-        currentIndex = (currentIndex + 1) % dots.length;
-        scrollToImage(currentIndex);
-      }, 3000);
-
-      // Click on dots to navigate
-      dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => {
-          currentIndex = index;
-          scrollToImage(currentIndex);
-        });
+    function showImage(idx) {
+      images.forEach((img, i) => {
+        img.classList.toggle('active', i === idx);
       });
     }
 
-    // Call the function when the DOM is fully loaded
-    initCarousel();
+    document.getElementById('prevBtn').addEventListener('click', function() {
+      current = (current - 1 + images.length) % images.length;
+      showImage(current);
+    });
+
+    document.getElementById('nextBtn').addEventListener('click', function() {
+      current = (current + 1) % images.length;
+      showImage(current);
+    });
+
+    // Optional: Auto-advance every 3 seconds
+    setInterval(() => {
+      current = (current + 1) % images.length;
+      showImage(current);
+    }, 3000);
+
+    showImage(current);
 
   } catch (error) {
     console.error("Dashboard error:", error);
