@@ -33,34 +33,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }, 30000);
 
-    // Carousel functionality
-    const images = document.querySelectorAll('.carousel-image');
-    let current = 0;
-
-    function showImage(idx) {
-      images.forEach((img, i) => {
-        img.classList.toggle('active', i === idx);
-      });
-    }
-
-    document.getElementById('prevBtn').addEventListener('click', function() {
-      current = (current - 1 + images.length) % images.length;
-      showImage(current);
-    });
-
-    document.getElementById('nextBtn').addEventListener('click', function() {
-      current = (current + 1) % images.length;
-      showImage(current);
-    });
-
-    // Optional: Auto-advance every 3 seconds
-    setInterval(() => {
-      current = (current + 1) % images.length;
-      showImage(current);
-    }, 3000);
-
-    showImage(current);
-
   } catch (error) {
     console.error("Dashboard error:", error);
     const errorBanner = document.getElementById("errorBanner");
@@ -69,4 +41,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       errorBanner.classList.remove("d-none");
     }
   }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const images = document.querySelectorAll('.carousel-image');
+  let current = 0;
+
+  function showImage(idx) {
+    images.forEach((img, i) => {
+      img.classList.toggle('active', i === idx);
+    });
+  }
+
+  document.getElementById('prevBtn').addEventListener('click', function() {
+    current = (current - 1 + images.length) % images.length;
+    showImage(current);
+  });
+
+  document.getElementById('nextBtn').addEventListener('click', function() {
+    current = (current + 1) % images.length;
+    showImage(current);
+  });
+
+  // Optional: Auto-advance every 4 seconds
+  setInterval(() => {
+    current = (current + 1) % images.length;
+    showImage(current);
+  }, 4000);
+
+  showImage(current);
 });
