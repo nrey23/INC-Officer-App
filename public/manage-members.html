@@ -211,9 +211,9 @@
           <input type="text" id="searchName" class="form-control" placeholder="Search by name...">
         </div>
         <div class="col-md-3">
-          <div class="d-flex flex-column">
-            <button id="btnManualBackup" class="btn btn-info">Create Manual Backup</button>
-            <small class="text-muted">Automatic backup runs every 3 days</small>
+          <div class="btn-group w-100">
+            <button id="btnAutoBackup" class="btn btn-primary">Auto Backup</button>
+            <button id="btnManualBackup" class="btn btn-info">Manual Backup</button>
           </div>
         </div>
         <div class="col-md-3">
@@ -229,6 +229,7 @@
       <div id="backupMessageBox" class="alert alert-success mt-3 text-center d-none">
         <strong>✅ Backup successful!</strong>
         <div id="backupDetails"></div>
+        <a id="backupLink" href="#" target="_blank" class="btn btn-sm btn-outline-primary mt-2">View in Google Drive</a>
       </div>
 
       <!-- Restore Message Box -->
@@ -345,6 +346,29 @@
 
 
 <script>
+  document.getElementById('btnAutoBackup').addEventListener('click', async () => {
+    try {
+      const response = await fetch('/auto-backup', { method: 'POST' });
+      const data = await response.json();
+      
+      if (response.ok) {
+        const messageBox = document.getElementById('backupMessageBox');
+        const backupDetails = document.getElementById('backupDetails');
+        const backupLink = document.getElementById('backupLink');
+        
+        backupDetails.textContent = `File: ${data.backupFile}`;
+        backupLink.href = data.publicLink;
+        
+        messageBox.classList.remove('d-none');
+        setTimeout(() => messageBox.classList.add('d-none'), 5000);
+      } else {
+        throw new Error(data.error || 'Backup failed');
+      }
+    } catch (error) {
+      alert('Error creating backup: ' + error.message);
+    }
+  });
+
   document.getElementById('btnManualBackup').addEventListener('click', async () => {
     try {
       const response = await fetch('/manual-backup', { method: 'POST' });
