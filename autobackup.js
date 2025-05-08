@@ -58,15 +58,13 @@ async function uploadBackupToGoogleDrive(backupPath, fileName) {
  * @returns {Promise<string>} The name of the created backup file
  */
 async function createAutoBackup() {
-  const now = new Date();
+  const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" }));
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   const baseFileName = `autobackup_${year}_${month}_${day}`;
   const fileName = `${baseFileName}.sql`;
   const backupsFolder = path.join(__dirname, 'backups');
-  
-  console.log("[DEBUG] Generated backup file name:", fileName);
 
   // Create backups directory if it doesn't exist
   if (!fs.existsSync(backupsFolder)) {
