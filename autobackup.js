@@ -4,6 +4,7 @@ const { google } = require("googleapis");
 const path = require("path");
 const fs = require("fs");
 const cron = require("node-cron");
+require('dotenv').config();
 
 // Database configuration
 const dbHost = process.env.DB_HOST;
@@ -48,6 +49,11 @@ async function createAutoBackup() {
     .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
   const fileName = `${baseFileName}.sql`;
   const backupPath = path.join(__dirname, 'backups', fileName);
+
+  // Ensure backups directory exists
+  if (!fs.existsSync(path.join(__dirname, 'backups'))) {
+    fs.mkdirSync(path.join(__dirname, 'backups'));
+  }
 
   try {
     await mysqldump({

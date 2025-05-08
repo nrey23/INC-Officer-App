@@ -10,6 +10,7 @@ const mysqldump = require('mysqldump'); // Node.js-based backup
 const { google } = require('googleapis'); // Google Drive integration
 const fileUpload = require('express-fileupload');
 const session = require('express-session');
+require('dotenv').config();
 
 require('./autobackup');
 
@@ -17,6 +18,14 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(fileUpload());
+
+// Session configuration
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: { secure: process.env.NODE_ENV === 'production' }
+}));
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, 'public')));
