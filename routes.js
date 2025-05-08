@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("./db");
 const bcrypt = require("bcryptjs");
+const fileUpload = require('express-fileupload');
 
 // ----------------------
 // Required Modules for Backup & Restore
@@ -122,12 +123,6 @@ const dbUser = 'root';
 const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';  
 const dbName = 'railway';
 const dbPort = 16446;
-const backupsFolder = path.join(__dirname, 'backups');
-
-// Ensure the backups folder exists
-if (!fs.existsSync(backupsFolder)) {
-  fs.mkdirSync(backupsFolder, { recursive: true });
-}
 
 // Google Drive Setup: Authenticate using your service account key
 const auth = new google.auth.GoogleAuth({
@@ -136,16 +131,39 @@ const auth = new google.auth.GoogleAuth({
 });
 const drive = google.drive({ version: 'v3', auth });
 
-// Function to upload backup file to Google Drive
-async function uploadBackupToGoogleDrive(backupPath, fileName) {
+// Function to create backup and return it as a buffer
+async function createBackupBuffer() {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    mysqldump({
+      connection: {
+        host: dbHost,
+        port: dbPort,
+        user: dbUser,
+        password: dbPassword,
+        database: dbName,
+      },
+      dump: {
+        data: true,
+        schema: true,
+      },
+      stream: true,
+    })
+    .on('data', chunk => chunks.push(chunk))
+    .on('end', () => resolve(Buffer.concat(chunks)))
+    .on('error', err => reject(err));
+  });
+}
+
+// Function to upload backup buffer to Google Drive
+async function uploadBackupToGoogleDrive(backupBuffer, fileName) {
   const fileMetadata = {
     name: fileName,
     parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'],
-
   };
   const media = {
     mimeType: 'application/sql',
-    body: fs.createReadStream(backupPath),
+    body: backupBuffer,
   };
   try {
     const response = await drive.files.create({
@@ -160,6 +178,82 @@ async function uploadBackupToGoogleDrive(backupPath, fileName) {
     throw error;
   }
 }
+
+// Auto Backup Route: Creates backup and uploads directly to Google Drive
+router.post("/auto-backup", async (req, res) => {
+  const now = new Date();
+  const fileName = `auto_backup_${(now.getMonth() + 1)
+    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
+  
+  try {
+    // Create backup buffer
+    const backupBuffer = await createBackupBuffer();
+    
+    // Upload to Google Drive
+    const driveFileId = await uploadBackupToGoogleDrive(backupBuffer, fileName);
+    const publicLinks = await getPublicLink(driveFileId);
+    
+    res.status(200).json({ 
+      message: "Auto backup successful", 
+      backupFile: fileName, 
+      googleDriveFileId: driveFileId,
+      publicLink: publicLinks.webViewLink
+    });
+  } catch (error) {
+    console.error(`❌ Error creating auto backup: ${error.message}`);
+    res.status(500).json({ error: "Auto backup failed", details: error.message });
+  }
+});
+
+// Manual Backup Route: Returns backup file for download
+router.post("/manual-backup", async (req, res) => {
+  const now = new Date();
+  const fileName = `manual_backup_${(now.getMonth() + 1)
+    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
+  
+  try {
+    // Create backup buffer
+    const backupBuffer = await createBackupBuffer();
+    
+    // Set headers for file download
+    res.setHeader('Content-Type', 'application/sql');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    
+    // Send the file
+    res.send(backupBuffer);
+  } catch (error) {
+    console.error(`❌ Error creating manual backup: ${error.message}`);
+    res.status(500).json({ error: "Manual backup failed", details: error.message });
+  }
+});
+
+// Restore Route: Now accepts file upload instead of looking for local file
+router.post("/restore", async (req, res) => {
+  if (!req.files || !req.files.backupFile) {
+    return res.status(400).json({ error: "Please upload a backup file." });
+  }
+  
+  const backupFile = req.files.backupFile;
+  const backupBuffer = backupFile.data;
+  
+  // Build the restore command using the buffer
+  const restoreCommand = `mysql -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName}`;
+  
+  const mysqlProcess = exec(restoreCommand, (error, stdout, stderr) => {
+    if (error) {
+      console.error("❌ Restore failed!");
+      console.error("Error message:", error.message);
+      console.error("StdErr:", stderr);
+      return res.status(500).json({ error: "Restore failed", details: error.message });
+    }
+    console.log("✅ Restore successful");
+    res.status(200).json({ message: "Restore successful" });
+  });
+  
+  // Write the backup buffer to the mysql process
+  mysqlProcess.stdin.write(backupBuffer);
+  mysqlProcess.stdin.end();
+});
 
 // Function to set file permissions to public and retrieve its public link(s)
 async function getPublicLink(fileId) {
@@ -184,77 +278,5 @@ async function getPublicLink(fileId) {
     throw error;
   }
 }
-
-// Backup Route: Create backup using mysqldump, upload to Google Drive,
-// then set it to public and return the public link.
-router.post("/backup", async (req, res) => {
-  const now = new Date();
-  // Generate base filename (e.g., backup_MMDDYYYY)
-  const baseFileName = `backup_${(now.getMonth() + 1)
-    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
-  // Count existing backups for today's date
-  const existingBackups = fs.readdirSync(backupsFolder).filter(file => file.startsWith(baseFileName)).length;
-  const backupNumber = existingBackups + 1;
-  const fileName = `${baseFileName}_${backupNumber}.sql`;
-  const backupPath = path.join(backupsFolder, fileName);
-  
-  try {
-    // Create the backup file using the mysqldump Node.js package
-    await mysqldump({
-      connection: {
-        host: dbHost,
-        port: dbPort,
-        user: dbUser,
-        password: dbPassword,
-        database: dbName,
-      },
-      dumpToFile: backupPath,
-    });
-    console.log(`✅ Backup successfully created at: ${backupPath}`);
-    
-    // Upload the backup file to Google Drive
-    const driveFileId = await uploadBackupToGoogleDrive(backupPath, fileName);
-    // Set the file permission to public and retrieve its public link(s)
-    const publicLinks = await getPublicLink(driveFileId);
-    
-    res.status(200).json({ 
-      message: "Backup successful", 
-      backupFile: fileName, 
-      googleDriveFileId: driveFileId,
-      publicLink: publicLinks.webViewLink
-    });
-  } catch (error) {
-    console.error(`❌ Error creating backup: ${error.message}`);
-    res.status(500).json({ error: "Backup failed", details: error.message });
-  }
-});
-
-// Restore Route (Using the mysql client; ensure 'mysql' is available in your environment)
-router.post("/restore", (req, res) => {
-  const { backupFile } = req.body; // Expected: "backup_MMDDYYYY_1.sql"
-  if (!backupFile) {
-    return res.status(400).json({ error: "Please provide a backup file name." });
-  }
-  
-  const backupPath = path.join(backupsFolder, backupFile);
-  if (!fs.existsSync(backupPath)) {
-    return res.status(404).json({ error: "Backup file not found." });
-  }
-  
-  // Build the restore command (assuming the mysql client is available)
-  const restoreCommand = `mysql -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName} < "${backupPath}"`;
-  console.log("📥 Running restore command:", restoreCommand);
-  
-  exec(restoreCommand, (error, stdout, stderr) => {
-    if (error) {
-      console.error("❌ Restore failed!");
-      console.error("Error message:", error.message);
-      console.error("StdErr:", stderr);
-      return res.status(500).json({ error: "Restore failed", details: error.message });
-    }
-    console.log("✅ Restore successful from:", backupPath);
-    res.status(200).json({ message: "Restore successful", restoredFrom: backupFile });
-  });
-});
 
 module.exports = router;

@@ -211,23 +211,30 @@
           <input type="text" id="searchName" class="form-control" placeholder="Search by name...">
         </div>
         <div class="col-md-3">
-          <button id="btnBackup" class="btn btn-primary w-100">Create Backup</button>
+          <div class="btn-group w-100">
+            <button id="btnAutoBackup" class="btn btn-primary">Auto Backup</button>
+            <button id="btnManualBackup" class="btn btn-info">Manual Backup</button>
+          </div>
         </div>
-        <div class="col-md-3 d-flex align-items-center">
-          <input type="text" id="restoreFileName" class="form-control me-2 flex-grow-1" placeholder="Enter backup file name to restore">
-          <button id="btnRestore" class="btn btn-warning w-100">Restore Backup</button>
+        <div class="col-md-3">
+          <div class="input-group">
+            <input type="file" id="restoreFile" class="form-control" accept=".sql">
+            <button id="btnRestore" class="btn btn-warning">Restore</button>
+          </div>
         </div>
       </div>
       
 
       <!-- Backup Message Box -->
       <div id="backupMessageBox" class="alert alert-success mt-3 text-center d-none">
-        <strong>✅ Backup successful!</strong> File: <span id="backupFileName"></span>
+        <strong>✅ Backup successful!</strong>
+        <div id="backupDetails"></div>
+        <a id="backupLink" href="#" target="_blank" class="btn btn-sm btn-outline-primary mt-2">View in Google Drive</a>
       </div>
 
       <!-- Restore Message Box -->
       <div id="restoreMessageBox" class="alert alert-warning mt-3 text-center d-none">
-        <strong>📥 Restore successful!</strong> File: <span id="restoreFileNameDisplay"></span>
+        <strong>📥 Restore successful!</strong>
       </div>
 
       <!-- Member Table -->
@@ -339,65 +346,79 @@
 
 
 <script>
-  document.getElementById("btnBackup").addEventListener("click", async () => {
-  try {
-    const response = await fetch("/api/backup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" }
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      // Display the message box with the file name
-      const messageBox = document.getElementById("backupMessageBox");
-      document.getElementById("backupFileName").innerText = data.backupFile;
-      messageBox.classList.remove("d-none");
-
-      // Hide after 5 seconds
-      setTimeout(() => {
-        messageBox.classList.add("d-none");
-      }, 5000);
-    } else {
-      alert("❌ Backup failed: " + data.error);
-    }
-  } catch (error) {
-    alert("⚠ Network error. Please try again.");
-  }
-});
-
-document.getElementById("btnRestore").addEventListener("click", async () => {
-    const backupFile = document.getElementById("restoreFileName").value.trim();
-    if (!backupFile) {
-      return alert("⚠ Please enter a backup file name.");
-    }
-
+  document.getElementById('btnAutoBackup').addEventListener('click', async () => {
     try {
-      const response = await fetch("/api/restore", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ backupFile }),
-      });
-
+      const response = await fetch('/auto-backup', { method: 'POST' });
       const data = await response.json();
-
+      
       if (response.ok) {
-        // Display the restore message box with the file name
-        const restoreMessageBox = document.getElementById("restoreMessageBox");
-        document.getElementById("restoreFileNameDisplay").innerText = backupFile;
-        restoreMessageBox.classList.remove("d-none");
-
-        // Hide after 5 seconds
-        setTimeout(() => {
-          restoreMessageBox.classList.add("d-none");
-        }, 5000);
+        const messageBox = document.getElementById('backupMessageBox');
+        const backupDetails = document.getElementById('backupDetails');
+        const backupLink = document.getElementById('backupLink');
+        
+        backupDetails.textContent = `File: ${data.backupFile}`;
+        backupLink.href = data.publicLink;
+        
+        messageBox.classList.remove('d-none');
+        setTimeout(() => messageBox.classList.add('d-none'), 5000);
       } else {
-        alert(`❌ Restore failed: ${data.error}`);
+        throw new Error(data.error || 'Backup failed');
       }
     } catch (error) {
-      alert("⚠ Network error. Please try again.");
+      alert('Error creating backup: ' + error.message);
     }
   });
 
+  document.getElementById('btnManualBackup').addEventListener('click', async () => {
+    try {
+      const response = await fetch('/manual-backup', { method: 'POST' });
+      const blob = await response.blob();
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `manual_backup_${new Date().toISOString().split('T')[0]}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      alert('Error creating manual backup: ' + error.message);
+    }
+  });
+
+  document.getElementById('btnRestore').addEventListener('click', async () => {
+    const fileInput = document.getElementById('restoreFile');
+    if (!fileInput.files.length) {
+      alert('Please select a backup file to restore');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('backupFile', fileInput.files[0]);
+
+    try {
+      const response = await fetch('/restore', {
+        method: 'POST',
+        body: formData
+      });
+      const data = await response.json();
+      
+      if (response.ok) {
+        const messageBox = document.getElementById('restoreMessageBox');
+        messageBox.classList.remove('d-none');
+        setTimeout(() => messageBox.classList.add('d-none'), 5000);
+        
+        // Refresh the member list after restore
+        loadMembers();
+      } else {
+        throw new Error(data.error || 'Restore failed');
+      }
+    } catch (error) {
+      alert('Error restoring backup: ' + error.message);
+    }
+  });
 </script>
 
   
