@@ -5,7 +5,6 @@ const db = require("./db");
 const bcrypt = require("bcryptjs");
 const mysql = require('mysql2/promise');
 const { createAutoBackup } = require('./autobackup');
-const session = require('express-session');
 
 // ----------------------
 // Required Modules for Backup & Restore
@@ -29,16 +28,8 @@ router.get('/member-count', (req, res) => {
   });
 });
 
-// Authentication middleware
-function requireAuth(req, res, next) {
-  if (req.session && req.session.isLoggedIn) {
-    return next();
-  }
-  return res.status(401).json({ error: "Unauthorized" });
-}
-
-// ADD MEMBER (protected)
-router.post("/add-member/;id", (req, res) => {
+// ADD MEMBER
+router.post("/add-member", (req, res) => {
   const { full_name, role, contact_info, gender, birthday } = req.body;
   const qrData = `${full_name}-${Date.now()}`;
   const query = `
@@ -116,7 +107,6 @@ router.post("/login", (req, res) => {
     const storedHash = results[0].password;
     const isValid = await bcrypt.compare(password, storedHash);
     if (isValid) {
-      req.session.isLoggedIn = true;
       res.status(200).json({ message: "Login successful!" });
     } else {
       res.status(401).json({ error: "Invalid credentials" });
@@ -129,11 +119,11 @@ router.post("/login", (req, res) => {
 // ----------------------
 
 // Database configuration for backup
-const dbHost = 'hopper.proxy.rlwy.net';
-const dbUser = 'root';
-const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';  
-const dbName = 'railway';
-const dbPort = 16446;
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
+const dbPort = process.env.DB_PORT;
 
 // Function to create backup and return it as a buffer
 async function createBackupBuffer() {
@@ -245,5 +235,14 @@ router.post("/auto-backup", async (req, res) => {
     res.status(500).json({ error: "Auto backup failed", details: error.message });
   }
 });
+
+// Function to upload backup buffer to Google Drive
+async function uploadBackupToGoogleDrive(backupBuffer, fileName) {
+  const fileMetadata = {
+    name: fileName,
+    parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+  };
+  // ... existing code ...
+}
 
 module.exports = router;
