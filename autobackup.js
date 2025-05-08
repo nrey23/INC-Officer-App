@@ -9,11 +9,11 @@ const fs = require("fs");
 const cron = require("node-cron");
 
 // Database connection configuration for backup operations
-const dbHost = 'hopper.proxy.rlwy.net';
-const dbUser = 'root';
-const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';
-const dbName = 'railway';
-const dbPort = 16446;
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
+const dbPort = process.env.DB_PORT;
 
 // Initialize Google Drive API authentication
 // Uses service account credentials for automated access
@@ -32,7 +32,7 @@ const drive = google.drive({ version: 'v3', auth });
 async function uploadBackupToGoogleDrive(backupPath, fileName) {
   const fileMetadata = {
     name: fileName,
-    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'], // Target folder ID in Google Drive
+    parents: [process.env.GOOGLE_DRIVE_FOLDER_ID], // Target folder ID in Google Drive
   };
   const media = {
     mimeType: 'application/sql',
