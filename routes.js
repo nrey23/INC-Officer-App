@@ -4,6 +4,7 @@ const router = express.Router();
 const db = require("./db");
 const bcrypt = require("bcryptjs");
 const mysql = require('mysql2/promise');
+const { createAutoBackup } = require('./autobackup');
 
 // ----------------------
 // Required Modules for Backup & Restore
@@ -124,13 +125,6 @@ const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';
 const dbName = 'railway';
 const dbPort = 16446;
 
-// Google Drive Setup: Authenticate using your service account key
-const auth = new google.auth.GoogleAuth({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_KEY),
-  scopes: ['https://www.googleapis.com/auth/drive.file'],
-});
-const drive = google.drive({ version: 'v3', auth });
-
 // Function to create backup and return it as a buffer
 async function createBackupBuffer() {
   const result = await mysqldump({
@@ -144,56 +138,6 @@ async function createBackupBuffer() {
   });
   return Buffer.from(result.dump.schema + '\n' + result.dump.data, 'utf-8');
 }
-
-// Function to upload backup buffer to Google Drive
-async function uploadBackupToGoogleDrive(backupBuffer, fileName) {
-  const fileMetadata = {
-    name: fileName,
-    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'],
-  };
-  const media = {
-    mimeType: 'application/sql',
-    body: backupBuffer,
-  };
-  try {
-    const response = await drive.files.create({
-      resource: fileMetadata,
-      media: media,
-      fields: 'id',
-    });
-    console.log(`✅ Backup file uploaded to Google Drive with File ID: ${response.data.id}`);
-    return response.data.id;
-  } catch (error) {
-    console.error(`❌ Failed to upload backup to Google Drive: ${error.message}`);
-    throw error;
-  }
-}
-
-// Auto Backup Route: Creates backup and uploads directly to Google Drive
-router.post("/auto-backup", async (req, res) => {
-  const now = new Date();
-  const fileName = `auto_backup_${(now.getMonth() + 1)
-    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
-  
-  try {
-    // Create backup buffer
-    const backupBuffer = await createBackupBuffer();
-    
-    // Upload to Google Drive
-    const driveFileId = await uploadBackupToGoogleDrive(backupBuffer, fileName);
-    const publicLinks = await getPublicLink(driveFileId);
-    
-    res.status(200).json({ 
-      message: "Auto backup successful", 
-      backupFile: fileName, 
-      googleDriveFileId: driveFileId,
-      publicLink: publicLinks.webViewLink
-    });
-  } catch (error) {
-    console.error(`❌ Error creating auto backup: ${error.message}`);
-    res.status(500).json({ error: "Auto backup failed", details: error.message });
-  }
-});
 
 // Manual Backup Route: Returns backup file for download
 router.post("/manual-backup", async (req, res) => {
@@ -276,5 +220,15 @@ async function getPublicLink(fileId) {
     throw error;
   }
 }
+
+router.post("/auto-backup", async (req, res) => {
+  try {
+    await createAutoBackup();
+    res.status(200).json({ message: "Auto backup successful!" });
+  } catch (error) {
+    console.error(`❌ Error creating auto backup: ${error.message}`);
+    res.status(500).json({ error: "Auto backup failed", details: error.message });
+  }
+});
 
 module.exports = router;
