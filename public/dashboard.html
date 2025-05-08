@@ -190,13 +190,14 @@
       pointer-events: auto;
     }
 
-    .carousel-image.left {
-      transform: translate(-140%, -50%) scale(0.85); 
-    }
-
+    .carousel-image.left,
     .carousel-image.right {
-      transform: translate(-20%, -50%) scale(0.85);
-    }
+      opacity: 0.6; 
+      width: 60%; 
+      height: 75%;
+      z-index: 2;
+      transform: translate(-120%, -50%) scale(0.85);
+}
 
     .carousel-image.right {
       transform: translate(20%, -50%) scale(0.85);
