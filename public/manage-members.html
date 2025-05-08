@@ -212,8 +212,8 @@
         </div>
         <div class="col-md-3">
           <div class="btn-group w-100">
-            <button id="btnAutoBackup" class="btn btn-primary">Backup Online</button>
             <button id="btnManualBackup" class="btn btn-info">Create Backup</button>
+            <button id="btnAutoBackup" class="btn btn-primary">Backup Online</button>
           </div>
         </div>
         <div class="col-md-3">
@@ -356,8 +356,9 @@
         const backupDetails = document.getElementById('backupDetails');
         const backupLink = document.getElementById('backupLink');
         
-        backupDetails.textContent = `File: ${data.backupFile}`;
-        backupLink.href = data.driveFolder;
+        backupDetails.textContent = 'Backup completed successfully!';
+        backupLink.href = 'https://drive.google.com/drive/folders/1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs';
+        backupLink.textContent = 'View Backup Folder';
         
         messageBox.classList.remove('d-none');
         setTimeout(() => messageBox.classList.add('d-none'), 5000);
