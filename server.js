@@ -9,8 +9,7 @@ const fs = require('fs');
 const mysqldump = require('mysqldump'); // Node.js-based backup
 const { google } = require('googleapis'); // Google Drive integration
 const fileUpload = require('express-fileupload');
-const session = require('express-session');
-require('dotenv').config();
+
 
 require('./autobackup');
 
