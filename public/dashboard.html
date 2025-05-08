@@ -153,22 +153,25 @@
     .carousel {
       position: relative;
       width: 100%;
-      max-width: 700px;
-      min-width: 500px;
-      height: 400px;
+      max-width: 900px;
+      min-width: 600px;
+      height: 450px;
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      overflow: visible;
     }
 
     .carousel-image {
       position: absolute;
       left: 20%;
       top: 50%;
-      width: 60%;
-      height: 80%;
+      width: 90%;
+      height: 90%;
       object-fit: cover;
-      border-radius: 16px;
+      border-radius: 12px;
       box-shadow: 0 4px 16px rgba(0,0,0,0.10);
       opacity: 0;
       transform: translate(-50%, -50%) scale(0.7);
@@ -200,10 +203,7 @@
     }
 
     .carousel-dots {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      margin-top: 18px;
+      display: none;
     }
 
     .dot {
