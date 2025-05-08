@@ -211,7 +211,10 @@
           <input type="text" id="searchName" class="form-control" placeholder="Search by name...">
         </div>
         <div class="col-md-3">
-          <button id="btnManualBackup" class="btn btn-info w-100">Manual Backup</button>
+          <div class="btn-group w-100">
+            <button id="btnAutoBackup" class="btn btn-primary">Auto Backup</button>
+            <button id="btnManualBackup" class="btn btn-info">Manual Backup</button>
+          </div>
         </div>
         <div class="col-md-3">
           <div class="input-group">
@@ -345,7 +348,7 @@
 <script>
   document.getElementById('btnAutoBackup').addEventListener('click', async () => {
     try {
-      const response = await fetch('/auto-backup', { method: 'POST' });
+      const response = await fetch('/api/auto-backup', { method: 'POST' });
       const data = await response.json();
       
       if (response.ok) {
@@ -368,7 +371,7 @@
 
   document.getElementById('btnManualBackup').addEventListener('click', async () => {
     try {
-      const response = await fetch('/manual-backup', { method: 'POST' });
+      const response = await fetch('/api/manual-backup', { method: 'POST' });
       const blob = await response.blob();
       
       // Create download link
@@ -396,7 +399,7 @@
     formData.append('backupFile', fileInput.files[0]);
 
     try {
-      const response = await fetch('/restore', {
+      const response = await fetch('/api/restore', {
         method: 'POST',
         body: formData
       });
