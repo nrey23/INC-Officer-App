@@ -59,8 +59,7 @@ const drive = google.drive({ version: 'v3', auth });
 async function uploadBackupToGoogleDrive(backupPath, fileName) {
   const fileMetadata = {
     name: fileName,
-    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'],
-
+    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'], // <-- Your Drive folder ID
   };
 
   const media = {
@@ -153,6 +152,6 @@ cron.schedule(
   createBackup,
   {
     scheduled: true,
-    timezone: "Asia/Manila", // Adjust as needed
+    timezone: "Asia/Manila",
   }
 );
