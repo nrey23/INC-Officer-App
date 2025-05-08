@@ -125,6 +125,61 @@
     .compact-row {
       margin-bottom: 15px;
     }
+
+    .carousel-container {
+      width: 100%;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .carousel {
+      display: flex;
+      overflow-x: auto;
+      scroll-behavior: smooth;
+      gap: 16px;
+      padding: 10px 0;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    .carousel::-webkit-scrollbar {
+      display: none; /* Chrome/Safari/Opera */
+    }
+
+    .carousel img {
+      flex: 0 0 auto;
+      width: 300px;
+      height: 200px;
+      object-fit: cover;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease;
+    }
+
+    .carousel img:hover {
+      transform: scale(1.05);
+    }
+
+    .carousel-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #ccc;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .dot.active {
+      background-color: #333;
+    }
   </style>
 </head>
 <body>
@@ -240,6 +295,23 @@
           <li>Anointing</li>
           <li>Evanglical Mission</li>
         </ul>
+      </div>
+
+      <div class="carousel-container">
+        <div class="carousel">
+          <img src="images/image1.jpg" alt="Image 1" />
+          <img src="images/image2.jpg" alt="Image 2" />
+          <img src="images/image3.jpg" alt="Image 3" />
+          <img src="images/image4.jpg" alt="Image 4" />
+          <img src="images/image5.jpg" alt="Image 5" />
+        </div>
+        <div class="carousel-dots">
+          <span class="dot active"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
       </div>
     </div>
   </div>

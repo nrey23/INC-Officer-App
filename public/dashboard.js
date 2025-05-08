@@ -33,6 +33,41 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }, 30000);
 
+    // Carousel functionality
+    function initCarousel() {
+      const carousel = document.querySelector('.carousel');
+      const dots = document.querySelectorAll('.dot');
+      let currentIndex = 0;
+
+      function scrollToImage(index) {
+        const imageWidth = carousel.querySelector('img').offsetWidth + 16; // 16px is the gap
+        carousel.scrollTo({
+          left: index * imageWidth,
+          behavior: 'smooth'
+        });
+        dots.forEach((dot, i) => {
+          dot.classList.toggle('active', i === index);
+        });
+      }
+
+      // Auto-scroll every 3 seconds
+      setInterval(() => {
+        currentIndex = (currentIndex + 1) % dots.length;
+        scrollToImage(currentIndex);
+      }, 3000);
+
+      // Click on dots to navigate
+      dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+          currentIndex = index;
+          scrollToImage(currentIndex);
+        });
+      });
+    }
+
+    // Call the function when the DOM is fully loaded
+    initCarousel();
+
   } catch (error) {
     console.error("Dashboard error:", error);
     const errorBanner = document.getElementById("errorBanner");
