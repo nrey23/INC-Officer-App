@@ -150,7 +150,8 @@ router.post("/manual-backup", async (req, res) => {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
-  const fileName = `manual_backup_${year}_${month}_${day}.sql`;
+  const baseFileName = `manualbackup_${year}_${month}_${day}`;
+  const fileName = `${baseFileName}.sql`;
 
   console.log("[DEBUG] Generated backup file name:", fileName);
 
@@ -159,6 +160,7 @@ router.post("/manual-backup", async (req, res) => {
     const backupBuffer = await createBackupBuffer();
     
     // Set headers for file download
+    res.attachment(fileName); 
     res.setHeader('Content-Type', 'application/sql');
     res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
     
