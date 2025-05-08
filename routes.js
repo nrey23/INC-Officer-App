@@ -5,6 +5,8 @@ const db = require("./db");
 const bcrypt = require("bcryptjs");
 const mysql = require('mysql2/promise');
 const { createAutoBackup } = require('./autobackup');
+const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 
 // ----------------------
 // Required Modules for Backup & Restore
@@ -28,8 +30,16 @@ router.get('/member-count', (req, res) => {
   });
 });
 
-// ADD MEMBER
-router.post("/add-member", (req, res) => {
+// Authentication middleware
+function requireAuth(req, res, next) {
+  if (req.session && req.session.isLoggedIn) {
+    return next();
+  }
+  return res.status(401).json({ error: "Unauthorized" });
+}
+
+// ADD MEMBER (protected)
+router.post("/add-member", requireAuth, (req, res) => {
   const { full_name, role, contact_info, gender, birthday } = req.body;
   const qrData = `${full_name}-${Date.now()}`;
   const query = `
@@ -41,8 +51,8 @@ router.post("/add-member", (req, res) => {
   });
 });
 
-// UPDATE MEMBER
-router.put("/update-member/:id", (req, res) => {
+// UPDATE MEMBER (protected)
+router.put("/update-member/:id", requireAuth, (req, res) => {
   const { full_name, role, contact_info, gender, birthday } = req.body;
   const memberId = req.params.id;
   const query = `
@@ -63,8 +73,8 @@ router.get("/members", (req, res) => {
   });
 });
 
-// DELETE MEMBER
-router.delete("/delete-member/:id", (req, res) => {
+// DELETE MEMBER (protected)
+router.delete("/delete-member/:id", requireAuth, (req, res) => {
   const memberId = req.params.id;
   const query = `DELETE FROM tbl_members WHERE member_id = ?`;
   db.query(query, [memberId], (err) => {
@@ -97,8 +107,15 @@ router.get('/dashboard-counts', (req, res) => {
 // SECURITY FEATURES
 // ----------------------
 
-// Admin Login Route
-router.post("/login", (req, res) => {
+// Stricter rate limiter for sensitive routes
+const sensitiveLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 requests per 15 minutes per IP
+  message: "Too many requests, please try again later."
+});
+
+// Admin Login Route (rate limited)
+router.post("/login", sensitiveLimiter, (req, res) => {
   const { username, password } = req.body;
   db.query("SELECT * FROM users WHERE username = ?", [username], async (err, results) => {
     if (err || results.length === 0) {
@@ -107,6 +124,7 @@ router.post("/login", (req, res) => {
     const storedHash = results[0].password;
     const isValid = await bcrypt.compare(password, storedHash);
     if (isValid) {
+      req.session.isLoggedIn = true;
       res.status(200).json({ message: "Login successful!" });
     } else {
       res.status(401).json({ error: "Invalid credentials" });
@@ -139,8 +157,8 @@ async function createBackupBuffer() {
   return Buffer.from(result.dump.schema + '\n' + result.dump.data, 'utf-8');
 }
 
-// Manual Backup Route: Returns backup file for download
-router.post("/manual-backup", async (req, res) => {
+// Manual Backup Route: Returns backup file for download (protected & rate limited)
+router.post("/manual-backup", requireAuth, sensitiveLimiter, async (req, res) => {
   const now = new Date();
   const fileName = `manual_backup_${(now.getMonth() + 1)
     .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
@@ -161,8 +179,8 @@ router.post("/manual-backup", async (req, res) => {
   }
 });
 
-// Restore Route: Now accepts file upload instead of looking for local file
-router.post("/restore", async (req, res) => {
+// Restore Route: Now accepts file upload instead of looking for local file (protected & rate limited)
+router.post("/restore", requireAuth, sensitiveLimiter, async (req, res) => {
   if (!req.files || !req.files.backupFile) {
     return res.status(400).json({ error: "Please upload a backup file." });
   }
@@ -221,8 +239,8 @@ async function getPublicLink(fileId) {
   }
 }
 
-// Auto Backup Route: Calls the same logic as autobackup.js
-router.post("/auto-backup", async (req, res) => {
+// Auto Backup Route: Calls the same logic as autobackup.js (protected & rate limited)
+router.post("/auto-backup", requireAuth, sensitiveLimiter, async (req, res) => {
   try {
     const backupFile = await createAutoBackup();
     res.status(200).json({

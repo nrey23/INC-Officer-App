@@ -9,6 +9,8 @@ const fs = require('fs');
 const mysqldump = require('mysqldump'); // Node.js-based backup
 const { google } = require('googleapis'); // Google Drive integration
 const fileUpload = require('express-fileupload');
+const session = require('express-session');
+const rateLimit = require('express-rate-limit');
 
 require('./autobackup');
 
@@ -16,6 +18,25 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(fileUpload());
+
+// Add session middleware
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-strong-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax'
+  }
+}));
+
+// Global rate limiter (100 requests per 15 minutes per IP)
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100
+});
+app.use(limiter);
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, 'public')));
