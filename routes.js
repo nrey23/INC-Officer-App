@@ -3,6 +3,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("./db");
 const bcrypt = require("bcryptjs");
+const mysql = require('mysql2/promise');
 
 // ----------------------
 // Required Modules for Backup & Restore
@@ -231,27 +232,28 @@ router.post("/restore", async (req, res) => {
   if (!req.files || !req.files.backupFile) {
     return res.status(400).json({ error: "Please upload a backup file." });
   }
-  
+
   const backupFile = req.files.backupFile;
-  const backupBuffer = backupFile.data;
-  
-  // Build the restore command using the buffer
-  const restoreCommand = `mysql -h ${dbHost} -P ${dbPort} -u ${dbUser} -p${dbPassword} ${dbName}`;
-  
-  const mysqlProcess = exec(restoreCommand, (error, stdout, stderr) => {
-    if (error) {
-      console.error("❌ Restore failed!");
-      console.error("Error message:", error.message);
-      console.error("StdErr:", stderr);
-      return res.status(500).json({ error: "Restore failed", details: error.message });
-    }
-    console.log("✅ Restore successful");
+  const sql = backupFile.data.toString();
+
+  try {
+    const connection = await mysql.createConnection({
+      host: dbHost,
+      port: dbPort,
+      user: dbUser,
+      password: dbPassword,
+      database: dbName,
+      multipleStatements: true, // This is important for SQL dumps!
+    });
+
+    await connection.query(sql);
+    await connection.end();
+
     res.status(200).json({ message: "Restore successful" });
-  });
-  
-  // Write the backup buffer to the mysql process
-  mysqlProcess.stdin.write(backupBuffer);
-  mysqlProcess.stdin.end();
+  } catch (error) {
+    console.error("❌ Restore failed!", error);
+    res.status(500).json({ error: "Restore failed", details: error.message });
+  }
 });
 
 // Function to set file permissions to public and retrieve its public link(s)
