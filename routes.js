@@ -1,4 +1,9 @@
 // routes.js
+// API Routes Configuration
+// This file defines all the API endpoints for the Church Duty Tracker application
+// Includes routes for member management, authentication, and database backup/restore operations
+
+
 const express = require("express");
 const router = express.Router();
 const db = require("./db");

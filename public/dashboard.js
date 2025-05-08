@@ -1,12 +1,20 @@
+/**
+ * Dashboard JavaScript Module
+ * Handles the main dashboard functionality including:
+ * - Displaying and auto-refreshing role counts
+ * - Managing the image carousel
+ */
+
 document.addEventListener("DOMContentLoaded", async () => {
   try {
-    // Load role counts
+    // Fetch initial role counts from the server
     const response = await fetch('/api/dashboard-counts');
     if (!response.ok) throw new Error("Failed to load role counts");
     
     const counts = await response.json();
     
-    // Update the UI with counts
+    // Update the UI with counts for each role
+    // Roles are displayed in a specific order: Deacon, Deaconess, Choir, Secretary, Finance
     const roles = ["Deacon", "Deaconess", "Choir", "Secretary", "Finance"];
     roles.forEach(role => {
       const element = document.getElementById(`${role.toLowerCase()}Count`);
@@ -15,7 +23,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     });
 
-    // Refresh counts every 30 seconds
+    // Set up automatic refresh of role counts every 30 seconds
+    // This ensures the dashboard stays up-to-date with any changes
     setInterval(async () => {
       try {
         const refreshResponse = await fetch('/api/dashboard-counts');
@@ -33,11 +42,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }, 30000);
 
+    // Image Carousel Setup
     const images = document.querySelectorAll('.carousel-image');
     const dots = document.querySelectorAll('.dot');
     let current = 0;
     const total = images.length;
 
+    /**
+     * Updates the carousel display
+     * Manages the positioning of images (center, left, right)
+     * Updates the active dot indicator
+     */
     function updateCarousel() {
       images.forEach((img, i) => {
         img.classList.remove('center', 'left', 'right');
@@ -54,7 +69,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    // Dot navigation
+    // Set up dot navigation for manual carousel control
     dots.forEach((dot, idx) => {
       dot.addEventListener('click', () => {
         current = idx;
@@ -62,15 +77,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
     });
 
-    // Auto-advance every 4 seconds
+    // Configure automatic carousel advancement every 4 seconds
     setInterval(() => {
       current = (current + 1) % total;
       updateCarousel();
     }, 4000);
 
+    // Initialize carousel display
     updateCarousel();
 
   } catch (error) {
+    // Error handling for dashboard initialization
     console.error("Dashboard error:", error);
     const errorBanner = document.getElementById("errorBanner");
     if (errorBanner) {
