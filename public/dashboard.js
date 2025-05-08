@@ -33,33 +33,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }, 30000);
 
-    const images = document.querySelectorAll('.carousel-image');
-    const dots = document.querySelectorAll('.dot');
-    let current = 0;
-
-    function showImage(idx) {
-      images.forEach((img, i) => {
-        img.classList.toggle('active', i === idx);
-        dots[i].classList.toggle('active', i === idx);
-      });
-    }
-
-    // Dot navigation
-    dots.forEach((dot, idx) => {
-      dot.addEventListener('click', () => {
-        current = idx;
-        showImage(current);
-      });
-    });
-
-    // Optional: Auto-advance every 4 seconds
-    setInterval(() => {
-      current = (current + 1) % images.length;
-      showImage(current);
-    }, 4000);
-
-    showImage(current);
-
   } catch (error) {
     console.error("Dashboard error:", error);
     const errorBanner = document.getElementById("errorBanner");
@@ -68,4 +41,33 @@ document.addEventListener("DOMContentLoaded", async () => {
       errorBanner.classList.remove("d-none");
     }
   }
+});
+
+const carousel = document.querySelector('.carousel');
+const dots = document.querySelectorAll('.dot');
+let currentIndex = 0;
+
+function scrollToImage(index) {
+  const imageWidth = carousel.querySelector('img').offsetWidth + 16; // 16px is the gap
+  carousel.scrollTo({
+    left: index * imageWidth,
+    behavior: 'smooth'
+  });
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('active', i === index);
+  });
+}
+
+// Auto-scroll every 3 seconds
+setInterval(() => {
+  currentIndex = (currentIndex + 1) % dots.length;
+  scrollToImage(currentIndex);
+}, 3000);
+
+// Click on dots to navigate
+dots.forEach((dot, index) => {
+  dot.addEventListener('click', () => {
+    currentIndex = index;
+    scrollToImage(currentIndex);
+  });
 });
