@@ -224,7 +224,14 @@ router.post("/restore", async (req, res) => {
   }
 
   const backupFile = req.files.backupFile;
-  const sql = backupFile.data.toString();
+  // Add drop table statements before the SQL dump
+  const dropTables = `
+    SET FOREIGN_KEY_CHECKS=0;
+    DROP TABLE IF EXISTS tbl_members;
+    DROP TABLE IF EXISTS users;
+    SET FOREIGN_KEY_CHECKS=1;
+  `;
+  const sql = dropTables + '\n' + backupFile.data.toString();
 
   try {
     const connection = await mysql.createConnection({
@@ -233,7 +240,7 @@ router.post("/restore", async (req, res) => {
       user: dbUser,
       password: dbPassword,
       database: dbName,
-      multipleStatements: true, // This is important for SQL dumps!
+      multipleStatements: true,
     });
 
     await connection.query(sql);
