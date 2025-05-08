@@ -152,6 +152,8 @@ router.post("/manual-backup", async (req, res) => {
   const day = String(now.getDate()).padStart(2, '0');
   const fileName = `manual_backup_${year}_${month}_${day}.sql`;
 
+  console.log("[DEBUG] Generated backup file name:", fileName);
+
   try {
     // Create backup buffer
     const backupBuffer = await createBackupBuffer();
