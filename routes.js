@@ -3,7 +3,6 @@ const express = require("express");
 const router = express.Router();
 const db = require("./db");
 const bcrypt = require("bcryptjs");
-const fileUpload = require('express-fileupload');
 
 // ----------------------
 // Required Modules for Backup & Restore
@@ -278,82 +277,5 @@ async function getPublicLink(fileId) {
     throw error;
   }
 }
-
-// Scheduled Backup Route (Called by Railway cron)
-router.post("/scheduled-backup", async (req, res) => {
-  // Verify the request is from Railway cron
-  const cronSecret = process.env.CRON_SECRET;
-  if (req.headers['x-cron-secret'] !== cronSecret) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-
-  const now = new Date();
-  const fileName = `scheduled_backup_${(now.getMonth() + 1)
-    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}.sql`;
-  
-  try {
-    // Create backup buffer
-    const backupBuffer = await createBackupBuffer();
-    
-    // Upload to Google Drive
-    const driveFileId = await uploadBackupToGoogleDrive(backupBuffer, fileName);
-    const publicLinks = await getPublicLink(driveFileId);
-    
-    console.log(`✅ Scheduled backup completed: ${fileName}`);
-    console.log(`🔗 Backup link: ${publicLinks.webViewLink}`);
-    
-    res.status(200).json({ 
-      message: "Scheduled backup successful", 
-      backupFile: fileName, 
-      googleDriveFileId: driveFileId,
-      publicLink: publicLinks.webViewLink
-    });
-  } catch (error) {
-    console.error(`❌ Error in scheduled backup: ${error.message}`);
-    res.status(500).json({ error: "Scheduled backup failed", details: error.message });
-  }
-});
-
-// Backup Status Route
-router.get("/backup-status", async (req, res) => {
-  try {
-    // Get the last backup file from Google Drive
-    const response = await drive.files.list({
-      q: "name contains 'scheduled_backup_' and trashed = false",
-      orderBy: 'createdTime desc',
-      pageSize: 1,
-      fields: 'files(id, name, createdTime, webViewLink)'
-    });
-
-    const lastBackup = response.data.files[0] || null;
-    const now = new Date();
-    
-    // Calculate next backup time (3 days from last backup or now if no backup exists)
-    const lastBackupDate = lastBackup ? new Date(lastBackup.createdTime) : new Date(0);
-    const nextBackupDate = new Date(lastBackupDate);
-    nextBackupDate.setDate(nextBackupDate.getDate() + 3);
-    
-    // If next backup is in the past, set it to 3 days from now
-    if (nextBackupDate < now) {
-      nextBackupDate.setDate(now.getDate() + 3);
-    }
-
-    // Calculate time remaining
-    const timeRemaining = Math.ceil((nextBackupDate - now) / (1000 * 60 * 60 * 24));
-    
-    res.json({
-      lastBackup: lastBackup ? {
-        date: lastBackup.createdTime,
-        fileName: lastBackup.name,
-        link: lastBackup.webViewLink
-      } : null,
-      nextBackup: nextBackupDate.toISOString(),
-      timeRemaining: `${timeRemaining} day${timeRemaining !== 1 ? 's' : ''}`
-    });
-  } catch (error) {
-    console.error('Error getting backup status:', error);
-    res.status(500).json({ error: "Failed to get backup status" });
-  }
-});
 
 module.exports = router;
