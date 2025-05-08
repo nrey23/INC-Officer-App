@@ -8,10 +8,12 @@ const path = require('path');
 const fs = require('fs');
 const mysqldump = require('mysqldump'); // Node.js-based backup
 const { google } = require('googleapis'); // Google Drive integration
+const fileUpload = require('express-fileupload');
 
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
+app.use(fileUpload());
 
 // Serve static files from the "public" directory
 app.use(express.static(path.join(__dirname, 'public')));
