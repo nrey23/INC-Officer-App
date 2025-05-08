@@ -383,13 +383,6 @@
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-
-      // Show success message
-      const messageBox = document.getElementById('backupMessageBox');
-      const backupDetails = document.getElementById('backupDetails');
-      backupDetails.textContent = `File: manual_backup_${new Date().toISOString().split('T')[0]}.sql`;
-      messageBox.classList.remove('d-none');
-      setTimeout(() => messageBox.classList.add('d-none'), 5000);
     } catch (error) {
       alert('Error creating manual backup: ' + error.message);
     }
