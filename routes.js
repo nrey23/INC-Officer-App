@@ -133,26 +133,16 @@ const drive = google.drive({ version: 'v3', auth });
 
 // Function to create backup and return it as a buffer
 async function createBackupBuffer() {
-  return new Promise((resolve, reject) => {
-    const chunks = [];
-    mysqldump({
-      connection: {
-        host: dbHost,
-        port: dbPort,
-        user: dbUser,
-        password: dbPassword,
-        database: dbName,
-      },
-      dump: {
-        data: true,
-        schema: true,
-      },
-      stream: true,
-    })
-    .on('data', chunk => chunks.push(chunk))
-    .on('end', () => resolve(Buffer.concat(chunks)))
-    .on('error', err => reject(err));
+  const result = await mysqldump({
+    connection: {
+      host: dbHost,
+      port: dbPort,
+      user: dbUser,
+      password: dbPassword,
+      database: dbName,
+    }
   });
+  return Buffer.from(result.dump.schema + '\n' + result.dump.data, 'utf-8');
 }
 
 // Function to upload backup buffer to Google Drive
