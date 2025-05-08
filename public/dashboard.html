@@ -128,15 +128,15 @@
 
     .dashboard-flex {
       display: flex;
-      align-items: stretch;
+      align-items: flex-start;
       width: 100%;
-      min-height: 600px;
       box-sizing: border-box;
+      gap: 32px;
+      padding: 32px;
     }
 
     .dashboard-schedule {
       flex: 0 0 400px;
-      padding: 40px 30px;
       background: #fff;
       z-index: 2;
       box-sizing: border-box;
@@ -146,36 +146,40 @@
       flex: 1 1 0;
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      align-items: stretch;
+      align-items: center;
+      justify-content: flex-start;
       background: #f5f5f5;
-      position: relative;
-      min-width: 0;
-      overflow: hidden;
+      border-radius: 18px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      padding: 32px 24px;
+      margin: 0 32px 0 0;
+      max-width: 700px;
+      min-width: 400px;
     }
 
     .carousel {
       position: relative;
       width: 100%;
-      height: 100%;
-      min-height: 600px;
+      max-width: 600px;
+      height: 340px;
       display: flex;
       align-items: center;
       justify-content: center;
+      overflow: hidden;
+      border-radius: 14px;
+      background: #eaeaea;
     }
 
     .carousel-image {
       display: none;
-      position: absolute;
-      left: 0; top: 0;
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 0;
-      box-shadow: none;
+      border-radius: 14px;
       transition: opacity 0.5s;
       opacity: 0;
-      z-index: 1;
+      position: absolute;
+      left: 0; top: 0;
     }
 
     .carousel-image.active {
@@ -184,28 +188,26 @@
       z-index: 2;
     }
 
-    .carousel-controls {
-      position: absolute;
-      bottom: 30px;
-      right: 40px;
-      z-index: 3;
+    .carousel-dots {
       display: flex;
-      gap: 20px;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 18px;
     }
 
-    .carousel-controls button {
-      padding: 12px 24px;
-      font-size: 2em;
-      border: none;
-      background: rgba(255,255,255,0.7);
+    .dot {
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
+      background-color: #bbb;
       cursor: pointer;
-      transition: background 0.2s;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      transition: background-color 0.3s;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
 
-    .carousel-controls button:hover {
-      background: #fff;
+    .dot.active {
+      background-color: #333;
     }
   </style>
 </head>
@@ -297,47 +299,44 @@
         </div>
       </div>
 
-      <div class="dashboard-flex">
-        <div class="dashboard-schedule">
-          <h2>Worship Service Schedule</h2>
-          <b>Thursday</b>
-          <ul>
-            <li>6:00 AM</li>
-            <li>10:00 AM</li>
-            <li>6:45 PM</li>
-          </ul>
-          <b>Saturday</b>
-          <ul>
-            <li>6:00 PM</li>
-          </ul>
-          <b>Sunday</b>
-          <ul>
-            <li>6:00 AM</li>
-            <li>10:00 AM</li>
-          </ul>
-          <h2>Special Events</h2>
-          <ul>
-            <li>Thanksgiving</li>
-            <li>Holy Supper</li>
-            <li>Anointing</li>
-            <li>Evangelical Mission</li>
-          </ul>
-        </div>
-        <div class="dashboard-carousel">
-          <div class="carousel">
-            <img src="https://picsum.photos/1200/600?random=1" alt="Image 1" class="carousel-image active" />
-            <img src="https://picsum.photos/1200/600?random=2" alt="Image 2" class="carousel-image" />
-            <img src="https://picsum.photos/1200/600?random=3" alt="Image 3" class="carousel-image" />
-          </div>
-          <div class="carousel-controls">
-            <button id="prevBtn">&#8592;</button>
-            <button id="nextBtn">&#8594;</button>
-          </div>
-        </div>
+      <div class="card p-4">
+        h2>Worship Service Schedule</h2>
+      <b>Thursday</b>
+      <ul>
+        <li>6:00 AM</li>
+        <li>10:00 AM</li>
+        <li>6:45 PM</li>
+      </ul>
+      <b>Saturday</b>
+      <ul>
+        <li>6:00 PM</li>
+      </ul>
+      <b>Sunday</b>
+      <ul>
+        <li>6:00 AM</li>
+        <li>10:00 AM</li>
+      </ul>
+      <h2>Special Events</h2>
+      <ul>
+        <li>Thanksgiving</li>
+        <li>Holy Supper</li>
+        <li>Anointing</li>
+        <li>Evangelical Mission</li>
+      </ul>
+    </div>
+    <div class="dashboard-carousel">
+      <div class="carousel">
+        <img src="images/image1.jpg" alt="Image 1" class="carousel-image active" />
+        <img src="images/image2.jpg" alt="Image 2" class="carousel-image" />
+        <img src="images/image3.jpg" alt="Image 3" class="carousel-image" />
+      </div>
+      <div class="carousel-dots">
+        <span class="dot active"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
       </div>
     </div>
   </div>
-</div>
 
 <script>
   const sidebar = document.getElementById('sidebar');
