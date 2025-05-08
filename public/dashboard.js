@@ -33,37 +33,42 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
     }, 30000);
 
-    const carousel = document.querySelector('.carousel');
+    const images = document.querySelectorAll('.carousel-image');
     const dots = document.querySelectorAll('.dot');
-    let currentIndex = 0;
+    let current = 0;
+    const total = images.length;
 
-    function scrollToImage(index) {
-      const imageWidth = carousel.querySelector('img').offsetWidth + 24; // 24px is the gap
-      carousel.scrollTo({
-        left: index * imageWidth,
-        behavior: 'smooth'
+    function updateCarousel() {
+      images.forEach((img, i) => {
+        img.classList.remove('center', 'left', 'right');
+        if (i === current) {
+          img.classList.add('center');
+        } else if (i === (current - 1 + total) % total) {
+          img.classList.add('left');
+        } else if (i === (current + 1) % total) {
+          img.classList.add('right');
+        }
       });
       dots.forEach((dot, i) => {
-        dot.classList.toggle('active', i === index);
+        dot.classList.toggle('active', i === current);
       });
     }
 
-    // Auto-scroll every 3 seconds
-    setInterval(() => {
-      currentIndex = (currentIndex + 1) % dots.length;
-      scrollToImage(currentIndex);
-    }, 3000);
-
-    // Click on dots to navigate
-    dots.forEach((dot, index) => {
+    // Dot navigation
+    dots.forEach((dot, idx) => {
       dot.addEventListener('click', () => {
-        currentIndex = index;
-        scrollToImage(currentIndex);
+        current = idx;
+        updateCarousel();
       });
     });
 
-    // Ensure the first image is shown on load
-    scrollToImage(currentIndex);
+    // Auto-advance every 4 seconds
+    setInterval(() => {
+      current = (current + 1) % total;
+      updateCarousel();
+    }, 4000);
+
+    updateCarousel();
 
   } catch (error) {
     console.error("Dashboard error:", error);
