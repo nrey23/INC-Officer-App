@@ -103,34 +103,6 @@
       flex-grow: 1;
     }
 
-    .dashboard-flex {
-      display: flex;
-      align-items: stretch;
-      width: 100%;
-      min-height: 600px;
-      box-sizing: border-box;
-    }
-
-    .dashboard-schedule {
-      flex: 0 0 400px;
-      padding: 40px 30px;
-      background: #fff;
-      z-index: 2;
-      box-sizing: border-box;
-    }
-
-    .dashboard-carousel {
-      flex: 1 1 0;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: stretch;
-      background: #f5f5f5;
-      position: relative;
-      min-width: 0;
-      overflow: hidden;
-    }
-
     .card-box {
       background: #f8f9fa;
       border-radius: 10px;
@@ -153,21 +125,46 @@
     .compact-row {
       margin-bottom: 15px;
     }
-    .carousel-container {
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
+
+    .dashboard-flex {
+      display: flex;
+      gap: 32px;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .dashboard-schedule {
+      flex: 1 1 350px;
+      min-width: 300px;
+      max-width: 400px;
+    }
+
+    .dashboard-carousel {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 420px;
+      max-width: 600px;
+      margin-left: 24px;
     }
 
     .carousel {
       display: flex;
       overflow-x: auto;
       scroll-behavior: smooth;
-      gap: 16px;
+      gap: 24px;
       padding: 10px 0;
       scrollbar-width: none; /* Firefox */
       -ms-overflow-style: none; /* IE/Edge */
+      width: 100%;
+      max-width: 540px;
+      min-width: 420px;
+      min-height: 280px;
+      border-radius: 12px;
+      background: #f5f5f5;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.07);
     }
 
     .carousel::-webkit-scrollbar {
@@ -176,11 +173,11 @@
 
     .carousel img {
       flex: 0 0 auto;
-      width: 300px;
-      height: 200px;
+      width: 420px;
+      height: 280px;
       object-fit: cover;
-      border-radius: 8px;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.10);
       transition: transform 0.3s ease;
     }
 
@@ -191,13 +188,13 @@
     .carousel-dots {
       display: flex;
       justify-content: center;
-      gap: 8px;
-      margin-top: 16px;
+      gap: 12px;
+      margin-top: 18px;
     }
 
     .dot {
-      width: 10px;
-      height: 10px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       background-color: #ccc;
       cursor: pointer;
@@ -297,46 +294,53 @@
         </div>
       </div>
 
-      <div class="dashboard-flex">
+      <div class="card p-4 dashboard-flex">
         <div class="dashboard-schedule">
-          <h2>Worship Service Schedule</h2>
-          <b>Thursday</b>
+          <h4>Worship Service Schedule</h4>
+          <h5>Thursday</h5>
           <ul>
             <li>6:00 AM</li>
             <li>10:00 AM</li>
             <li>6:45 PM</li>
           </ul>
-          <b>Saturday</b>
+          <h5>Saturday</h5>
           <ul>
             <li>6:00 PM</li>
-          </ul>
-          <b>Sunday</b>
+          </ul>          
+          <h5>Sunday</h5>
           <ul>
             <li>6:00 AM</li>
             <li>10:00 AM</li>
           </ul>
-          <h2>Special Events</h2>
+
+          <h4 class="mt-4">Special Events</h4>
           <ul>
             <li>Thanksgiving</li>
             <li>Holy Supper</li>
             <li>Anointing</li>
-            <li>Evangelical Mission</li>
+            <li>Evanglical Mission</li>
           </ul>
         </div>
         <div class="dashboard-carousel">
           <div class="carousel">
-            <img src="https://picsum.photos/1200/600?random=1" alt="Image 1" class="carousel-image active" />
-            <img src="https://picsum.photos/1200/600?random=2" alt="Image 2" class="carousel-image" />
-            <img src="https://picsum.photos/1200/600?random=3" alt="Image 3" class="carousel-image" />
+            <img src="images/image1.jpg" alt="Image 1" />
+            <img src="images/image2.jpg" alt="Image 2" />
+            <img src="images/image3.jpg" alt="Image 3" />
+            <img src="images/image4.jpg" alt="Image 4" />
+            <img src="images/image5.jpg" alt="Image 5" />
           </div>
-          <div class="carousel-controls">
-            <button id="prevBtn">&#8592;</button>
-            <button id="nextBtn">&#8594;</button>
+          <div class="carousel-dots">
+            <span class="dot active"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
           </div>
         </div>
       </div>
     </div>
   </div>
+</div>
 
 <script>
   const sidebar = document.getElementById('sidebar');
