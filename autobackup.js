@@ -62,8 +62,10 @@ async function createAutoBackup() {
     });
     console.log(`✅ Autobackup created at: ${backupPath}`);
     await uploadBackupToGoogleDrive(backupPath, fileName);
+    return fileName;
   } catch (error) {
     console.error(`❌ Autobackup failed: ${error.message}`);
+    throw error;
   }
 }
 

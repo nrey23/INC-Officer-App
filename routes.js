@@ -221,6 +221,7 @@ async function getPublicLink(fileId) {
   }
 }
 
+// Auto Backup Route: Calls the same logic as autobackup.js
 router.post("/auto-backup", async (req, res) => {
   try {
     await createAutoBackup();
