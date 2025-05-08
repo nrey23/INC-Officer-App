@@ -119,11 +119,11 @@ router.post("/login", (req, res) => {
 // ----------------------
 
 // Database configuration for backup
-const dbHost = 'hopper.proxy.rlwy.net';
-const dbUser = 'root';
-const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';  
-const dbName = 'railway';
-const dbPort = 16446;
+const dbHost = process.env.DB_HOST;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASSWORD;
+const dbName = process.env.DB_NAME;
+const dbPort = process.env.DB_PORT;
 
 // Function to create backup and return it as a buffer
 async function createBackupBuffer() {
