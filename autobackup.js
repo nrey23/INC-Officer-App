@@ -69,8 +69,8 @@ async function createAutoBackup() {
   }
 }
 
-// Schedule autobackup every 5 minutes for testing
-cron.schedule('*/5 * * * *', createAutoBackup, {
+// Schedule autobackup every 3 days at midnight
+cron.schedule('0 0 */3 * *', createAutoBackup, {
   scheduled: true,
   timezone: "Asia/Manila",
 });
