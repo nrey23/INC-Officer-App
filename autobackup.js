@@ -59,8 +59,10 @@ async function uploadBackupToGoogleDrive(backupPath, fileName) {
  */
 async function createAutoBackup() {
   const now = new Date();
-  const baseFileName = `autobackup_${(now.getMonth() + 1)
-    .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const baseFileName = `autobackup_${year}_${month}_${day}`;
   const fileName = `${baseFileName}.sql`;
   const backupsFolder = path.join(__dirname, 'backups');
   
