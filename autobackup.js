@@ -6,11 +6,11 @@ const fs = require("fs");
 const cron = require("node-cron");
 
 // Database configuration
-const dbHost = process.env.DB_HOST;
-const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_PASSWORD;
-const dbName = process.env.DB_NAME;
-const dbPort = process.env.DB_PORT;
+const dbHost = 'hopper.proxy.rlwy.net';
+const dbUser = 'root';
+const dbPassword = 'UwwQOpuOguVEktXetgEwnwVISHBWvtel';
+const dbName = 'railway';
+const dbPort = 16446;
 
 // Google Drive Setup
 const auth = new google.auth.GoogleAuth({
@@ -22,7 +22,7 @@ const drive = google.drive({ version: 'v3', auth });
 async function uploadBackupToGoogleDrive(backupPath, fileName) {
   const fileMetadata = {
     name: fileName,
-    parents: [process.env.GOOGLE_DRIVE_FOLDER_ID],
+    parents: ['1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs'],
   };
   const media = {
     mimeType: 'application/sql',
@@ -47,7 +47,11 @@ async function createAutoBackup() {
   const baseFileName = `autobackup_${(now.getMonth() + 1)
     .toString().padStart(2, '0')}${now.getDate().toString().padStart(2, '0')}${now.getFullYear()}`;
   const fileName = `${baseFileName}.sql`;
-  const backupPath = path.join(__dirname, 'backups', fileName);
+  const backupsFolder = path.join(__dirname, 'backups');
+  if (!fs.existsSync(backupsFolder)) {
+    fs.mkdirSync(backupsFolder, { recursive: true });
+  }
+  const backupPath = path.join(backupsFolder, fileName);
 
   try {
     await mysqldump({
