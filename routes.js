@@ -224,8 +224,12 @@ async function getPublicLink(fileId) {
 // Auto Backup Route: Calls the same logic as autobackup.js
 router.post("/auto-backup", async (req, res) => {
   try {
-    await createAutoBackup();
-    res.status(200).json({ message: "Auto backup successful!" });
+    const backupFile = await createAutoBackup();
+    res.status(200).json({
+      message: "Auto backup successful!",
+      backupFile,
+      driveFolder: "https://drive.google.com/drive/folders/1VGNvQ6EUdvMj4IrOaGZo2PYX5Zb8FQCs"
+    });
   } catch (error) {
     console.error(`❌ Error creating auto backup: ${error.message}`);
     res.status(500).json({ error: "Auto backup failed", details: error.message });
