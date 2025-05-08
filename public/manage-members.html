@@ -410,8 +410,8 @@
         messageBox.classList.remove('d-none');
         setTimeout(() => messageBox.classList.add('d-none'), 5000);
         
-        // Refresh the member list after restore
-        loadMembers();
+        // Refresh the page after restore
+        window.location.reload();
       } else {
         throw new Error(data.error || 'Restore failed');
       }
